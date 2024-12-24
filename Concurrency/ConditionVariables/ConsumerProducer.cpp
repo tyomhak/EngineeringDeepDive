@@ -11,8 +11,7 @@ int main()
 {
     std::queue<int> data{};
     std::mutex data_mutex{};
-    std::condition_variable not_full_cv{};
-    std::condition_variable not_empty_cv{};
+    std::condition_variable data_size_cv{};
 
     const int max_data_size = 5;
 
@@ -20,26 +19,26 @@ int main()
         while (true)
         {
             std::unique_lock<std::mutex> lock(data_mutex);
-            not_full_cv.wait(lock, [&data](){ return data.size() < max_data_size; });
+            data_size_cv.wait(lock, [&data](){ return data.size() < max_data_size; });
 
             int item = std::rand() % 10 + 1;
             data.push(item);
             std::cout << "Produced " << std::to_string(item) << ", container size: " << data.size()<< std::endl;
 
-            not_empty_cv.notify_one();
+            data_size_cv.notify_one();
         }
     };
     auto consume_function = [&](){
         while (true)
         {
             std::unique_lock<std::mutex> lock(data_mutex);
-            not_empty_cv.wait(lock, [&data](){ return !data.empty() ;});
+            data_size_cv.wait(lock, [&data](){ return !data.empty() ;});
 
             auto var = data.front();
             data.pop();
             std::cout << "Consumed " << std::to_string(var) << ", container size: " << data.size()<< std::endl;
 
-            not_full_cv.notify_one();
+            data_size_cv.notify_one();
         }
     };
 
