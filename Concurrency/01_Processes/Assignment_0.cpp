@@ -20,7 +20,8 @@ bool print_proc_tree()
             exit(EXIT_FAILURE);
         }
     }
-    else{
+    else
+    {
         pstree_pid = wait(&status);
         return WIFEXITED(status);
     }
@@ -41,7 +42,7 @@ bool new_fork(int& curr_proc_num)
     {
         ++curr_proc_num;
         pid_t ppid = getppid();
-        std::cout << "Child (" << std::to_string(getpid()) << "), from pareent (" << std::to_string(ppid) << ")" << std::endl;
+        std::cout << "Child (" << std::to_string(getpid()) << "), from parent (" << std::to_string(ppid) << ")" << std::endl;
     }
     else
     {
