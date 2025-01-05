@@ -1,3 +1,11 @@
+// Multiple Fork calls
+// Objective: Understand the process hierarchy when multiple sequential fork syscalls are invoked.
+
+// Write a program that:
+// Calls multiple  fork syscalls one after another. Check what the process tree looks like.
+// Pay attention to the hierarchy of processes, how many parents and children are created
+
+
 #include <iostream>
 #include <sys/types.h>
 #include <sys/wait.h>
