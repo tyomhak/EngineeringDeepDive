@@ -86,6 +86,7 @@ int main()
     pthread_join(consumer_thread, NULL);
 
     pthread_cond_destroy(&data_cond_var);
+    pthread_mutex_destroy(&data_mutex);
 
     return 0;
 }
