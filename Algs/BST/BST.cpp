@@ -4,7 +4,7 @@
 int main()
 {
     BST bst{};
-    std::vector<int> values = {34, 16, 8, 10, 14, 22, 20, 19, 21, 52, 41, 39, 46, 44};
+    std::vector<int> values = { 12, 34, 16, 8, 10, 40 }; // 14, 22, 20, 19, 21, 52, 41, 39, 46, 44
 
     for (auto i : values)
     {
@@ -12,9 +12,18 @@ int main()
     }
 
     std::cout << "Valid: " << bst.is_valid() << std::endl;
-    for (int i = 0; i < 52; ++i)
+    bst.print();
+
+    for (auto i : values)
     {
-        std::cout << "Contains " << i << " : " << bst.contains(i) << std::endl;
+        if (auto min_node = bst.min_node())
+        {
+            bst.remove(min_node->val);
+            bst.print();
+            std::cout << "\n";
+        }
+        else
+            break;
     }
 
     return 0;
