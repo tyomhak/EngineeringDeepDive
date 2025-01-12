@@ -11,20 +11,21 @@ int main()
         bst.insert(i);
     }
 
+    std::cout << "Size: " << bst.size() << std::endl;
     std::cout << "Valid: " << bst.is_valid() << std::endl;
     bst.print();
 
-    for (auto i : values)
-    {
-        if (auto min_node = bst.min_node())
-        {
-            bst.remove(min_node->val);
-            bst.print();
-            std::cout << "\n";
-        }
-        else
-            break;
-    }
+    // for (auto i : values)
+    // {
+    //     if (auto min_node = bst.min_node())
+    //     {
+    //         bst.remove(min_node->val);
+    //         bst.print();
+    //         std::cout << "\n";
+    //     }
+    //     else
+    //         break;
+    // }
 
     return 0;
 }

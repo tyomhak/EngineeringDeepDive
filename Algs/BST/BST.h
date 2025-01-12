@@ -26,6 +26,11 @@ public:
         return is_valid(root, INT_MIN, INT_MAX);
     } 
 
+    int size() const 
+    {
+        return size(root);
+    }
+
     void insert(int val)
     {
         if (root)
@@ -70,30 +75,12 @@ public:
 
     void print()
     {
-        if (!root) return;
-        std::queue<Node*> q{};
-        q.push(root);
-        while (!q.empty())
-        {
-            auto level_node_count = q.size();
-            for (int i = 0; i < level_node_count; ++i)
-            {
-                auto curr_node = q.front();
-                q.pop();
+        if (!root)
+            return;
 
-                if (curr_node == nullptr)
-                {
-                    std::cout << "|";
-                    continue;
-                }
-
-                std::cout << curr_node->val << " ";
-                if (curr_node->l) q.push(curr_node->l);
-                if (curr_node->r) q.push(curr_node->r);
-                q.push(nullptr);
-            }
-            std::cout << "\n";
-        }
+        std::cout << root->val << std::endl;
+        print("", root->l, true);
+        print("", root->r, false);
     }
 
 private:
@@ -111,6 +98,12 @@ private:
         if (!node) return true;
         if (node->val < min || node->val >= max) return false;
         return is_valid(node->l, min, node->val) && is_valid(node->r, node->val, max);
+    }
+
+    int size(const Node* root) const
+    {
+        if (!root) return 0;
+        return 1 + size(root->l) + size(root->r);
     }
 
     void insert(int val, Node* &node)
@@ -179,6 +172,15 @@ private:
         while (node->r)
             node = node->r;
         return &node;
+    }
+
+    void print(const std::string& prefix, Node* node, bool isLeft)
+    {
+        if (!node) return;
+        std::cout << prefix << (isLeft ? "├──" : "└──" ) << node->val << std::endl;
+
+        print(prefix + (isLeft ? "│   " : "    "), node->l, true);
+        print(prefix + (isLeft ? "│   " : "    "), node->r, false);
     }
 
 private:
