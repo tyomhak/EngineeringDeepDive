@@ -50,6 +50,11 @@ public:
         print("", root, false);
     }
 
+    void flip()
+    {
+        return flip(root);
+    }
+
 private:
     bool is_valid(Node* node, const T& min, const T& max) const
     {
@@ -148,6 +153,14 @@ private:
 
         print(prefix + next_prefix, node->l, true);
         print(prefix + next_prefix, node->r, false);
+    }
+
+    void flip(Node* node)
+    {
+        if (!node) return;
+        std::swap(node->l, node->r);
+        flip(node->l);
+        flip(node->r);
     }
 
     void _destroy_node(Node* node)

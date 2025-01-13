@@ -14,16 +14,19 @@ int main()
     // BST bst{}; // without parent
     bst<int> bst{}; // with parent
 
-    for (int i = 0; i < 30; ++i)
+    for (int i = 0; i < 15; ++i)
     {
         bst.insert(rand() % 100);
     }
     bst.print();
+    // bst.flip();
 
     // INTERACTIVE BST //
+    // commands:
     // insert <num>
     // remove <num>
     // check
+    // flip
     // exit
     std::string input_str;
     while (std::getline(std::cin, input_str))
@@ -31,6 +34,13 @@ int main()
         input_str = to_lower(input_str);
         if (input_str == "check")
         {
+            std::cout << (bst.is_valid() ? "BST is valid!\n" : "BST is NOT valid!\n");
+            continue;
+        }
+        if (input_str == "flip")
+        {
+            bst.flip();
+            bst.print();
             std::cout << (bst.is_valid() ? "BST is valid!\n" : "BST is NOT valid!\n");
             continue;
         }
