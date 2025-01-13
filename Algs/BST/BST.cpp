@@ -11,45 +11,31 @@ std::string to_lower(const std::string& str)
 
 int main()
 {
-    // BST bst{};
-    bst_impl_parented<int> bst{};
+    // BST bst{}; // without parent
+    bst<int> bst{}; // with parent
 
-    std::vector<int> values = { 12, 34, 16, 8, 10, 40, 14, 22, 20, 19, 21, 52, 41, 39, 46, 44 };
-
-    for (auto i : values)
+    for (int i = 0; i < 30; ++i)
     {
-        bst.insert(i);
+        bst.insert(rand() % 100);
     }
-
-    // std::cout << "Size: " << bst.size() << std::endl;
-    // std::cout << "Valid: " << bst.is_valid() << std::endl;
     bst.print();
 
-    // int size = bst.size();
-    // for (auto i = 0; i < size; ++i)
-    // {
-    //     if (auto min_node = bst.min_node())
-    //     {
-    //         bst.remove(min_node->val);
-    //         bst.print();
-    //         std::cout << "\n";
-    //     }
-    //     else
-    //         break;
-    // }
-
+    // INTERACTIVE BST //
+    // insert <num>
+    // remove <num>
+    // check
+    // exit
     std::string input_str;
     while (std::getline(std::cin, input_str))
     {
         input_str = to_lower(input_str);
-        if (input_str == "print")
+        if (input_str == "check")
         {
-            bst.print();
+            std::cout << (bst.is_valid() ? "BST is valid!\n" : "BST is NOT valid!\n");
             continue;
         }
-        else if (input_str == "exit")
+        if (input_str == "exit")
             break;
-
 
         if (auto space_it = std::find(input_str.begin(), input_str.end(), ' '); 
             space_it != input_str.end())
@@ -62,8 +48,10 @@ int main()
             else if (action == "remove")
                 bst.remove(number);
         }
+        bst.print();
+        
+        std::cout << "\n\n";
     }
     
-
     return 0;
 }

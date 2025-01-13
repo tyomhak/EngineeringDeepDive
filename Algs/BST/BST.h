@@ -3,8 +3,10 @@
 #include <queue>
 #include <functional>
 
+
+// with parent
 template<class T>
-class bst_impl_parented
+class bst
 {
 public:
     struct Node
@@ -17,11 +19,15 @@ public:
         Node(T _val) : val(_val) {}
     };
 
-    ~bst_impl_parented() { _destroy_node(root); }
+    ~bst() { _destroy_node(root); }
 
     bool is_valid() const 
     {
-        return is_valid(root);
+        if (!root) return true;
+        auto min_val = min(root)->val;
+        auto max_val = max(root)->val;
+
+        return is_valid(root, min_val, max_val);
     }
 
     void insert(const T& val)
@@ -45,11 +51,13 @@ public:
     }
 
 private:
-    bool is_valid(Node* node)
+    bool is_valid(Node* node, const T& min, const T& max) const
     {
-        return true;
+        if (!node) return true;
+        return min <= node->val && node->val <= max
+            && is_valid(node->l, min, node->val) 
+            && is_valid(node->r, node->val, max);
     }
-
 
     void insert(Node* &node, const T& val)
     {
@@ -108,12 +116,12 @@ private:
         return node;
     }
 
-    Node* min(Node* node)
+    Node* min(Node* node) const
     {
         if (!node) return nullptr;
         return node->l ? min(node->l) : node;
     }
-    Node* max(Node* node)
+    Node* max(Node* node) const
     {
         if (!node) return nullptr;
         return node->r ? max(node->r) : node;
@@ -123,18 +131,17 @@ private:
     {
         if (!node) return;
 
-        bool has_nodes_below = isLeft && node->parent->r; // root is always right
-        
-        std::string curr_prefix = std::string(isLeft && node->parent->r ? "╠═" : "╚═")
-            + std::string(isLeft ? "L" : "R")
-            + std::string("═══");
-        
-        std::string next_prefix = isLeft && node->parent->r ? "║     " : "      ";
-        
-        if (node == root)
+        std::string curr_prefix{};
+        std::string next_prefix{};
+
+        if (node != root)
         {
-            curr_prefix = "";
-            next_prefix = "";
+            bool has_nodes_below = isLeft && node->parent->r; // root is always right
+
+            curr_prefix = std::string(has_nodes_below ? "╠═" : "╚═")
+                + std::string(isLeft ? "L" : "R")
+                + std::string("═══");
+            next_prefix = has_nodes_below ? "║     " : "      ";
         }
 
         std::cout << prefix + curr_prefix << node->val << std::endl;
@@ -161,19 +168,8 @@ private:
     Node* root { nullptr };
 };
 
-class bst
-{
-public:
-    bool is_valid() const;
-    int size() const;
 
-    void insert(int val);
-    void remove(int val);
-    int min() const;
-    int max() const;
-    // Node* find(int val);
-};
-
+// no parents
 class BST
 {
 public:
