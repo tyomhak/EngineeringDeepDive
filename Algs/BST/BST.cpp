@@ -15,17 +15,18 @@ int main()
     std::cout << "Valid: " << bst.is_valid() << std::endl;
     bst.print();
 
-    // for (auto i : values)
-    // {
-    //     if (auto min_node = bst.min_node())
-    //     {
-    //         bst.remove(min_node->val);
-    //         bst.print();
-    //         std::cout << "\n";
-    //     }
-    //     else
-    //         break;
-    // }
+    int size = bst.size();
+    for (auto i = 0; i < size; ++i)
+    {
+        if (auto min_node = bst.min_node())
+        {
+            bst.remove(min_node->val);
+            bst.print();
+            std::cout << "\n";
+        }
+        else
+            break;
+    }
 
     return 0;
 }

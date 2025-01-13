@@ -150,27 +150,27 @@ private:
         return true;
     }
 
-    Node** find(Node* &root, int val)
-    {
-        if (!root) return nullptr;
-        if (val < root->val) return find(root->l, val);
-        if (val > root->val) return find(root->r, val);
-        return &root;
-    }
-
-    Node** min_node_ptr(Node* &node)
+    Node** find(Node* &node, int val)
     {
         if (!node) return nullptr;
-        while (node->l)
-            node = node->l;
+        if (val < node->val) return find(node->l, val);
+        if (val > node->val) return find(node->r, val);
         return &node;
     }
 
-    Node** max_node_ptr(Node* &node)
+    Node** min_node_ptr(Node* &node) const
     {
         if (!node) return nullptr;
-        while (node->r)
-            node = node->r;
+        if (node->l)
+            return min_node_ptr(node->l);
+        return &node;
+    }
+
+    Node** max_node_ptr(Node* &node) const
+    {
+        if (!node) return nullptr;
+        if (node->r)
+            return max_node_ptr(node->r);
         return &node;
     }
 
