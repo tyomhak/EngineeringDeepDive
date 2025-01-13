@@ -1,6 +1,178 @@
 #include <iostream>
 #include <limits.h>
 #include <queue>
+#include <functional>
+
+template<class T>
+class bst_impl_parented
+{
+public:
+    struct Node
+    {
+        T val;
+        Node *l { nullptr };
+        Node *r { nullptr };
+        Node *parent { nullptr };
+
+        Node(T _val) : val(_val) {}
+    };
+
+    ~bst_impl_parented() { _destroy_node(root); }
+
+    bool is_valid() const 
+    {
+        return is_valid(root);
+    }
+
+    void insert(const T& val)
+    {
+        if (!root)
+            root = new Node(val);
+        else
+            insert(root, val);
+    }
+
+    void remove(const T& val)
+    {
+        if (auto remove_node = find(val))
+            remove(remove_node);
+    }
+
+    void print()
+    {
+        if (!root) return;
+        print("", root, false);
+    }
+
+private:
+    bool is_valid(Node* node)
+    {
+        return true;
+    }
+
+
+    void insert(Node* &node, const T& val)
+    {
+        if (val == node->val) return;
+        Node* &branch = val < node->val ? node->l : node->r;
+        if (branch)
+            insert(branch, val);
+        else
+        {
+            Node *newNode = new Node(val);
+            newNode->parent = node;
+            branch = newNode;
+        }
+    }
+
+    void remove(Node* remove_node)
+    {
+        auto parent = remove_node->parent;
+        if (remove_node->l && remove_node->r)
+        {
+            if (auto decr_node = max(remove_node->l))
+            {
+                std::swap(decr_node->val, remove_node->val);
+                remove(decr_node);
+                return;
+            }
+        }
+        else if (remove_node->l || remove_node->r)
+        {
+            Node* &remove_node_ptr_ref = parent->l == remove_node ? parent->l : parent->r;
+            Node* replacement_node = remove_node->l ? remove_node->l : remove_node->r;
+            Node* temp_node = remove_node;
+
+            remove_node_ptr_ref = replacement_node;
+            replacement_node->parent = parent;
+            delete temp_node;
+        }
+        else
+        {
+            Node* &remove_node_ptr_ref = parent->l == remove_node ? parent->l : parent->r;
+            delete remove_node;
+            remove_node_ptr_ref = nullptr;
+        }
+    }
+
+
+    Node* find(const T& val)
+    {
+        return find(root, val);
+    }
+    Node* find(Node* node, const T& val)
+    {
+        if (!node) return nullptr;
+        if (val < node->val) return find(node->l, val);
+        if (val > node->val) return find(node->r, val);
+        return node;
+    }
+
+    Node* min(Node* node)
+    {
+        if (!node) return nullptr;
+        return node->l ? min(node->l) : node;
+    }
+    Node* max(Node* node)
+    {
+        if (!node) return nullptr;
+        return node->r ? max(node->r) : node;
+    }
+
+    void print(const std::string& prefix, Node* node, bool isLeft) const
+    {
+        if (!node) return;
+
+        bool has_nodes_below = isLeft && node->parent->r; // root is always right
+        
+        std::string curr_prefix = std::string(isLeft && node->parent->r ? "╠═" : "╚═")
+            + std::string(isLeft ? "L" : "R")
+            + std::string("═══");
+        
+        std::string next_prefix = isLeft && node->parent->r ? "║     " : "      ";
+        
+        if (node == root)
+        {
+            curr_prefix = "";
+            next_prefix = "";
+        }
+
+        std::cout << prefix + curr_prefix << node->val << std::endl;
+
+        print(prefix + next_prefix, node->l, true);
+        print(prefix + next_prefix, node->r, false);
+    }
+
+    void _destroy_node(Node* node)
+    {
+        if (!node) return;
+        _destroy_node(node->l);
+        _destroy_node(node->r);
+        delete node;
+    }
+
+    bool is_left(Node* node) const
+    {
+        if (!node || !node->parent) return false;
+        return node == node->parent->l;
+    }
+
+private:
+    Node* root { nullptr };
+};
+
+class bst
+{
+public:
+    bool is_valid() const;
+    int size() const;
+
+    void insert(int val);
+    void remove(int val);
+    int min() const;
+    int max() const;
+    // Node* find(int val);
+};
 
 class BST
 {
