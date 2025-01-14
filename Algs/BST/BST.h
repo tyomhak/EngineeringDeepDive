@@ -2,7 +2,7 @@
 #include <limits.h>
 #include <queue>
 #include <functional>
-
+#include <stack>
 
 // with parent
 template<class T>
@@ -53,6 +53,24 @@ public:
     void flip()
     {
         return flip(root);
+    }
+
+    void flip_iterative()
+    {
+        if (!root) return;
+        std::stack<Node*> st{};
+        st.push(root);
+        while (!st.empty())
+        {
+            auto node = st.top();
+            st.pop();
+            Node* temp = node->r;
+            node->r = node->l;
+            node->l = temp;
+            // std::swap(node->l, node->r);
+            if (node->l) st.push(node->l);
+            if (node->r) st.push(node->r);
+        }
     }
 
 private:

@@ -39,7 +39,12 @@ int main()
         }
         if (input_str == "flip")
         {
-            bst.flip();
+            const auto recursive = true; 
+            if (recursive)
+                bst.flip();
+            else
+                bst.flip_iterative();
+                
             bst.print();
             std::cout << (bst.is_valid() ? "BST is valid!\n" : "BST is NOT valid!\n");
             continue;
