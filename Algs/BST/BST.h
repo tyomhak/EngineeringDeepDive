@@ -3,6 +3,8 @@
 #include <queue>
 #include <functional>
 #include <stack>
+#include <algorithm>
+
 
 // with parent
 template<class T>
@@ -19,7 +21,70 @@ public:
         Node(T _val) : val(_val) {}
     };
 
+    struct Iterator
+    {
+        Node* _node{nullptr};
+
+        Iterator(Node* node) :_node(node){};
+
+        Iterator operator--()
+        {
+            if (_node->l)
+            {
+                _node = _node->l;
+                while (_node->r)
+                    _node = _node->r;
+                return *this;
+            }
+
+            while (_node->parent && _node == _node->parent->l)
+                _node = _node->parent;
+            _node = _node->parent;
+            return *this;
+        }
+
+        bool operator==(const Iterator& other)
+        { 
+            return _node == other._node; 
+        }
+        bool operator!=(const Iterator& other)
+        {
+            return !(*this == other);
+        }
+    };
+
+    bst() = default;
+    bst(std::vector<T>& vals)
+    {
+        std::sort(vals.begin(), vals.end());
+        batch_insert(vals, 0, vals.size());
+    }
+
+    void batch_insert(const std::vector<T>& sorted_vals, int l, int r)
+    {
+        if (l < r)
+        {
+            int mid_pos = (l + r) / 2;
+            insert(sorted_vals[mid_pos]);
+            batch_insert(sorted_vals, l, mid_pos);
+            batch_insert(sorted_vals, mid_pos + 1, r);
+        }
+    }
+
     ~bst() { _destroy_node(root); }
+
+    Iterator begin(){
+        return Iterator(min());
+    }
+    Iterator end() {
+        return Iterator(nullptr);
+    }
+    Iterator rbegin(){
+        return Iterator(max());
+    }
+    Iterator rend(){
+        return Iterator(nullptr);
+    }
 
     bool is_valid() const 
     {
@@ -64,14 +129,14 @@ public:
         {
             auto node = st.top();
             st.pop();
-            Node* temp = node->r;
-            node->r = node->l;
-            node->l = temp;
-            // std::swap(node->l, node->r);
+            std::swap(node->l, node->r);
             if (node->l) st.push(node->l);
             if (node->r) st.push(node->r);
         }
     }
+
+    Node* min() const { return min(root);}
+    Node* max() const { return max(root);}
 
 private:
     bool is_valid(Node* node, const T& min, const T& max) const
@@ -198,6 +263,12 @@ private:
 private:
     Node* root { nullptr };
 };
+
+
+
+
+
+
 
 
 // no parents

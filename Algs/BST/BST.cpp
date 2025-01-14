@@ -12,12 +12,17 @@ std::string to_lower(const std::string& str)
 int main()
 {
     // BST bst{}; // without parent
-    bst<int> bst{}; // with parent
+    // bst<int> bst{}; // with parent
 
+
+    std::vector<int> vals{};
     for (int i = 0; i < 15; ++i)
     {
-        bst.insert(rand() % 100);
+        // bst.insert(rand() % 100);
+        vals.push_back(i);
     }
+    
+    bst<int> bst(vals); // with parent
     bst.print();
     // bst.flip();
 
@@ -39,7 +44,7 @@ int main()
         }
         if (input_str == "flip")
         {
-            const auto recursive = true; 
+            const auto recursive = false; 
             if (recursive)
                 bst.flip();
             else
@@ -48,6 +53,12 @@ int main()
             bst.print();
             std::cout << (bst.is_valid() ? "BST is valid!\n" : "BST is NOT valid!\n");
             continue;
+        }
+        if (input_str == "rprint")
+        {
+            for (auto it = bst.rbegin(); it != bst.rend(); --it)
+                std::cout << it._node->val << ", ";
+            std::cout << std::endl;
         }
         if (input_str == "exit")
             break;
