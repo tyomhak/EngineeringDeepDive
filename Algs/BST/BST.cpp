@@ -11,10 +11,6 @@ std::string to_lower(const std::string& str)
 
 int main()
 {
-    // BST bst{}; // without parent
-    // bst<int> bst{}; // with parent
-
-
     std::vector<int> vals{};
     for (int i = 0; i < 15; ++i)
     {
@@ -22,9 +18,9 @@ int main()
         vals.push_back(i);
     }
     
-    bst<int> bst(vals); // with parent
+    bst<int> bst(vals);
     bst.print();
-    // bst.flip();
+    std::cout << "Balanceness: " << bst.balanceness() << std::endl;
 
     // INTERACTIVE BST //
     // commands:
@@ -81,6 +77,7 @@ int main()
                 bst.remove(number);
         }
         bst.print();
+        std::cout << "Balanceness: " << bst.balanceness() << std::endl;
         
         std::cout << "\n\n";
     }

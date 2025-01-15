@@ -95,6 +95,11 @@ public:
         return is_valid(root, min_val, max_val);
     }
 
+    float balanceness() const 
+    {
+        return (float)shallowest_leaf_depth(root) / (float)deepest_leaf_depth(root);
+    }
+
     void insert(const T& val)
     {
         if (!root)
@@ -251,6 +256,24 @@ private:
     {
         if (!node) return nullptr;
         return node->r ? max(node->r) : node;
+    }
+
+
+    int deepest_leaf_depth(Node* node) const
+    {
+        if (!node->l && !node->r)
+            return 1;
+        if (node->l && node->r)
+            return std::max(deepest_leaf_depth(node->l), deepest_leaf_depth(node->r)) + 1;
+        return deepest_leaf_depth(node->l ? node->l : node->r) + 1;
+    }
+    int shallowest_leaf_depth(Node* node) const
+    {
+        if (!node->l && !node->r)
+            return 1;
+        if (node->l && node->r)
+            return std::min(shallowest_leaf_depth(node->l), shallowest_leaf_depth(node->r)) + 1;
+        return shallowest_leaf_depth(node->l ? node->l : node->r) + 1;
     }
 
     void print(const std::string& prefix, Node* node, bool isLeft) const
