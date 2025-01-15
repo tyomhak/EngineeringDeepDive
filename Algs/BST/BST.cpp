@@ -60,6 +60,12 @@ int main()
                 std::cout << it._node->val << ", ";
             std::cout << std::endl;
         }
+        if (input_str == "preorder_print")
+        {
+            bst.pre_order_action_iterative([](int i){ std::cout << i << ", "; });
+            // bst.pre_order_action_recursive([](int i){ std::cout << i << ", "; });
+            std::cout << std::endl;
+        }
         if (input_str == "exit")
             break;
 

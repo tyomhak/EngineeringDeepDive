@@ -135,6 +135,44 @@ public:
         }
     }
 
+    void pre_order_action_iterative(std::function<void(T)> f)
+    {
+        Node* curr_node = root;
+        while (curr_node)
+        {
+            f(curr_node->val);
+            curr_node = next_pre_order(curr_node);
+        }
+    }
+
+    Node* next_pre_order(Node* node)
+    {
+        if (!node) return nullptr;
+        if (node->l) return node->l;
+        if (node->r) return node->r;
+        if (!node->parent) return nullptr;
+
+        while (node->parent 
+            && node->parent->r
+            && (node == node->parent->r))
+            node = node->parent;
+
+        return node->parent ? node->parent->r : nullptr;
+    }
+
+    void pre_order_action_recursive(std::function<void(T)> f)
+    {
+        _pre_order_action_recursive(root, f);
+    }
+    void _pre_order_action_recursive(Node* node, std::function<void(T)> f)
+    {
+        if (!node) return;
+        f(node->val);
+        
+        _pre_order_action_recursive(node->l, f);
+        _pre_order_action_recursive(node->r, f);
+    }
+
     Node* min() const { return min(root);}
     Node* max() const { return max(root);}
 
