@@ -28,6 +28,8 @@ int main()
     // remove <num>
     // check
     // flip
+    // rprint
+    // preorder_print
     // exit
     std::string input_str;
     while (std::getline(std::cin, input_str))
@@ -75,8 +77,9 @@ int main()
                 bst.insert(number);
             else if (action == "remove")
                 bst.remove(number);
+
+            bst.print();
         }
-        bst.print();
         std::cout << "Balanceness: " << bst.balanceness() << std::endl;
         
         std::cout << "\n\n";
