@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <algorithm>
 
 
 struct Point3
@@ -19,6 +20,14 @@ struct Point3
         stream << "(" << p.x << "," << p.y << "," << p.z << ")";
         return stream;
     }
+
+    bool operator==(const Point3& other) const {
+        return x == other.x
+            && y == other.y
+            && z == other.z;
+    }
+
+    // bool operator==(const Point3& other) const = default; // std=c++20 only
 };
 
 namespace std
@@ -41,15 +50,14 @@ public:
     : HashTable(200)
     {}
 
-    HashTable(int table_size)
+    HashTable(size_t table_size)
     : _table_size(table_size)
     , _list_table(table_size, std::list<T>())
     {}
 
     void insert(const T& obj);
-
     void remove(const T& obj);
-    // bool contains(const T& obj) const;
+    bool contains(const T& obj) const;
 
     void print()
     {
@@ -84,9 +92,9 @@ public:
     }
 
 private:
-    size_t hash(const T& obj) { return __hash()(obj); }
+    size_t hash(const T& obj) const { return __hash()(obj) % _table_size; }
 
-    int _table_size;
+    size_t _table_size;
     std::vector<std::list<T>> _list_table;
 };
 
@@ -95,15 +103,23 @@ template<class T, class __hash>
 void HashTable<T, __hash>::insert(const T& obj)
 {
     auto hash_num = hash(obj);
-    hash_num = hash_num % _table_size;
     _list_table[hash_num].insert(_list_table[hash_num].begin(), obj);
 }
 
-// template<class T>
-// void HashTable<T>::remove(const T& obj)
-// {
+template<class T, class __hash>
+void HashTable<T, __hash>::remove(const T& obj)
+{
+    auto hash_num = hash(obj);
+    _list_table[hash_num].remove(obj);
+}
 
-// }
+template<class T, class __hash>
+bool HashTable<T, __hash>::contains(const T& obj) const
+{
+    auto hash_num = hash(obj);
+    auto& list = _list_table.at(hash_num);
+    return std::find(list.cbegin(), list.cend(), obj) != list.cend();
+}
 
 
 

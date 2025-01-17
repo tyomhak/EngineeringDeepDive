@@ -40,7 +40,7 @@ int main()
     for (auto p : points)
         ht.insert(p);
 
-    HashTable<Point3, point_hash_sum> ht_sum{};
+    HashTable<Point3, point_hash_sum> ht_sum(80000);
     for (auto p : points)
         ht_sum.insert(p);
 
@@ -58,4 +58,14 @@ int main()
 
     std::cout << "\nPow\n";
     ht_pow.print_stats();
+
+    Point3 p1 = Point3(-1, -1, -1);
+    std::cout << "\nPoint" << p1 << " found: " << (ht.contains(p1) ? "true" : "false") << std::endl;
+    std::cout << "Point" << points[3] << " found: " << (ht.contains(points[3]) ? "true" : "false" ) << "\n" << std::endl;
+
+    for (auto p : points)
+    {
+        ht.remove(p);
+    }
+    ht.print_stats();
 }
