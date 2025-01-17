@@ -20,25 +20,38 @@ struct Point3
     }
 };
 
+namespace std
+{
+    template<> struct hash<Point3>
+    {
+        size_t operator()(const Point3& p) const
+        {
+            return p.x * 5 + p.y * 7 + p.z * 11;
+        }
+    };
+}
 
 
-template<class T, int _table_size = 20>
+template<class T, class __hash = std::hash<T>>
 class HashTable
 {
 public:
-    HashTable(std::function<size_t(const T&)> hash_func) : _hash(hash_func)
+    HashTable()
+    : HashTable(200)
+    {}
+
+    HashTable(int table_size)
+    : _table_size(table_size)
+    , _list_table(table_size, std::list<T>())
     {}
 
     void insert(const T& obj);
 
-    // void remove(const T& obj);
+    void remove(const T& obj);
     // bool contains(const T& obj) const;
 
     void print()
     {
-        size_t max_list_length = 0;
-        size_t min_list_length = SIZE_MAX;
-        size_t avg_list_length = 0;
         for (int i = 0; i < _table_size; ++i)
         {
             std::cout << _list_table[i].size() << " : ";
@@ -47,7 +60,17 @@ public:
                 std::cout << elem << "----";
             }
             std::cout << std::endl;
+        }
+    }
 
+    void print_stats()
+    {
+        size_t max_list_length = 0;
+        size_t min_list_length = SIZE_MAX;
+        size_t avg_list_length = 0;
+
+        for (int i = 0; i < _table_size; ++i)
+        {
             max_list_length = std::max(max_list_length, _list_table[i].size());
             min_list_length = std::min(min_list_length, _list_table[i].size());
             avg_list_length += _list_table[i].size();
@@ -55,20 +78,20 @@ public:
 
         avg_list_length = avg_list_length / _table_size;
         std::cout << "Max: " << max_list_length << ", Min: " << min_list_length << ", Avg: " << avg_list_length << std::endl;
+
+        // calculate VARIANCE (for grading hash func)
     }
 
 private:
-    size_t hash(const T& obj) { return _hash(obj); }
+    size_t hash(const T& obj) { return __hash()(obj); }
 
-
-    // constexpr static size_t _table_size = 20; 
-    std::list<T> _list_table[_table_size];
-    std::function<size_t(const T&)> _hash;
+    int _table_size;
+    std::vector<std::list<T>> _list_table;
 };
 
 
-template<class T, int _table_size>
-void HashTable<T, _table_size>::insert(const T& obj)
+template<class T, class __hash>
+void HashTable<T, __hash>::insert(const T& obj)
 {
     auto hash_num = hash(obj);
     hash_num = hash_num % _table_size;

@@ -2,6 +2,29 @@
 #include <vector>
 #include <cmath>
 
+
+struct point_hash_sum
+{
+    size_t operator()(const Point3& p) const {
+        return size_t(p.x + p.y + p.z);
+    }
+};
+
+struct point_hash_mult
+{
+    size_t operator()(const Point3& p) const {
+        return p.x * 5 + p.y * 7 + p.z * 11;
+    }
+};
+
+struct point_hash_pow
+{
+    size_t operator()(const Point3& p) const {
+        return pow(p.x * 13, 3) + pow(p.y * 17, 5) + pow(p.z * 19, 7);
+    }
+};
+
+
 int main()
 {
     int point_count = 500;
@@ -13,22 +36,26 @@ int main()
         points.push_back(Point3(rand() % dim_range, rand() % dim_range, rand() % dim_range));
     }
 
-    auto hash_func_sum = [](const Point3& p) {
-        return p.x + p.y + p.z;
-    };
-
-    auto hash_prime_mult = [](const Point3& p) {
-        return p.x * 5 + p.y * 7 + p.z * 11;
-    };
-
-    auto hash_prime_pow = [](const Point3& p) {
-        return pow(p.x * 13, 3) + pow(p.y * 17, 5) + pow(p.z * 19, 7);
-    };
-
-
-    HashTable<Point3, 200> ht(hash_prime_mult);
+    HashTable<Point3> ht{};
     for (auto p : points)
         ht.insert(p);
 
-    ht.print();
+    HashTable<Point3, point_hash_sum> ht_sum{};
+    for (auto p : points)
+        ht_sum.insert(p);
+
+    HashTable<Point3, point_hash_pow> ht_pow{};
+    for (auto p : points)
+        ht_pow.insert(p);
+    
+
+    // ht.print();
+    std::cout << "Default, e.g. mult by primes and sum \n";
+    ht.print_stats();
+
+    std::cout << "\n\nSum\n";
+    ht_sum.print_stats();
+
+    std::cout << "\nPow\n";
+    ht_pow.print_stats();
 }
