@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <cstdint>
+#include <vector>
 
 
 struct Point3
