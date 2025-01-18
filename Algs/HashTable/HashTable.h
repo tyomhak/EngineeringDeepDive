@@ -76,17 +76,22 @@ public:
     {
         size_t max_list_length = 0;
         size_t min_list_length = SIZE_MAX;
-        size_t avg_list_length = 0;
+        size_t total_count = 0;
+        size_t non_empty_lists_count = 0;
 
         for (int i = 0; i < _table_size; ++i)
         {
             max_list_length = std::max(max_list_length, _list_table[i].size());
             min_list_length = std::min(min_list_length, _list_table[i].size());
-            avg_list_length += _list_table[i].size();
+            total_count += _list_table[i].size();
+
+            if (!_list_table[i].empty())
+                non_empty_lists_count++;
         }
 
-        avg_list_length = avg_list_length / _table_size;
-        std::cout << "Max: " << max_list_length << ", Min: " << min_list_length << ", Avg: " << avg_list_length << std::endl;
+        auto avg_list_length = (float)total_count / (float)non_empty_lists_count;
+        std::cout << "Max: " << max_list_length << ", Min: " << min_list_length << ", Avg non-empty: " << avg_list_length << std::endl;
+        std::cout << "Collisions: " << (total_count - non_empty_lists_count) << std::endl;
 
         // calculate VARIANCE (for grading hash func)
     }

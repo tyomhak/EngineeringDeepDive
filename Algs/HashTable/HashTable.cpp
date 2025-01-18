@@ -27,7 +27,7 @@ struct point_hash_pow
 
 int main()
 {
-    int point_count = 500;
+    int point_count = 150;
     int dim_range = 100000;
 
     std::vector<Point3> points{};
@@ -40,7 +40,7 @@ int main()
     for (auto p : points)
         ht.insert(p);
 
-    HashTable<Point3, point_hash_sum> ht_sum(80000);
+    HashTable<Point3, point_hash_sum> ht_sum{};
     for (auto p : points)
         ht_sum.insert(p);
 
