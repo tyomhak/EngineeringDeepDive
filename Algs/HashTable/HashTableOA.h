@@ -8,23 +8,39 @@ template<class T, class hash_t = std::hash<T>>
 class HashOA
 {
 public:
-    HashOA() : HashOA(20)
+    HashOA() : HashOA(_min_size)
     {}
     HashOA(size_t size)
     : _table(size, std::nullopt)
     {}
 
     void insert(const T& val);
+    void remove(const T& val);
     bool search(const T& val) const;
 
     void print() const;
 
 private:
     void _insert(const T& val, std::vector<std::optional<T>>& table);
-    void rehash(float coefficient);
+    void _remove(const T& val, std::vector<std::optional<T>>& table);
 
     size_t hash(const T& key, size_t max_val) const { return hash_t()(key) % max_val; }
 
+    void rehash()
+    {
+        const float max_load = 0.75f;
+        const float min_load = 0.3f;
+        const float upscale = 2.0f;
+        const float downscale = 0.5f;
+
+        float curr_load = load();
+        if (curr_load > max_load)
+            rehash(upscale);
+        if (_table.size() > _min_size && curr_load < min_load)
+            rehash(downscale);
+    }
+    void rehash(float coefficient);
+    
     float load() const 
     {
         auto non_empty_count = std::count_if(_table.begin(), _table.end(), [](const std::optional<T>& o){ return o != std::nullopt; });
@@ -34,8 +50,8 @@ private:
 
 
 private:
-    // size_t _curr_table_size;
     std::vector<std::optional<T>> _table;
+    const int _min_size = 8;
 };
 
 
@@ -43,13 +59,14 @@ private:
 template<class T, class hash_t>
 void HashOA<T, hash_t>::insert(const T& val) 
 { 
-    float curr_load = load();
-    if (curr_load > 0.75f)
-        rehash(2.0);
-    if (curr_load < 0.5)
-        rehash(0.7);
-
+    rehash();
     return _insert(val, _table); 
+}
+
+template<class T, class hash_t>
+void HashOA<T, hash_t>::remove(const T& val) 
+{ 
+    return _remove(val, _table);
 }
 
 template<class T, class hash_t>
@@ -95,7 +112,6 @@ void HashOA<T, hash_t>::rehash(float coefficient)
     std::swap(_table, new_table);
 }
 
-
 template<class T, class hash_t>
 void HashOA<T, hash_t>::_insert(const T& val, std::vector<std::optional<T>>& table)
 {
@@ -104,4 +120,25 @@ void HashOA<T, hash_t>::_insert(const T& val, std::vector<std::optional<T>>& tab
         hash_key = (hash_key + 1) % table.size(); 
 
     table[hash_key] = val;
+}
+
+template<class T, class hash_t>
+void HashOA<T, hash_t>::_remove(const T& val, std::vector<std::optional<T>>& table)
+{
+    auto table_size = table.size();
+    auto hash_key = hash(val, table_size);
+    if (table.at(hash_key).has_value())
+    {
+        table.at(hash_key) = std::nullopt;
+
+        auto repl_key = (hash_key + 1) % table_size;
+        while (table.at(repl_key) != std::nullopt)
+        {
+            auto curr_val = table.at(repl_key).value();
+            auto curr_val_key = hash(curr_val, table_size);
+            // if (curr_val_key < )
+
+            repl_key = (repl_key + 1) % table_size;
+        }
+    }
 }
