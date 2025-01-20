@@ -19,13 +19,16 @@ public:
     bool search(const T& val) const;
 
     void print() const;
+    void print_clusters_length() const;
 
 private:
     void _insert(const T& val, std::vector<std::optional<T>>& table);
     void _remove(size_t hash_key, std::vector<std::optional<T>>& table);
 
     size_t hash(const T& key, size_t upper_bound) const { return hash_t()(key) % upper_bound; }
-
+    size_t increment(size_t index) const { return increment(index, _table.size()); }
+    size_t increment(size_t index, size_t upper_bound) const { return (index + 1) % upper_bound; }
+    
     void rehash()
     {
         const float max_load = 0.75f;
@@ -71,7 +74,7 @@ void HashOA<T, hash_t>::remove(const T& val)
 
     auto hash_key = hash(val, _table.size());
     while (_table.at(hash_key) != val)
-        hash_key = (hash_key + 1) % _table.size();
+        hash_key = increment(hash_key);
     return _remove(hash_key, _table);
 }
 
@@ -83,7 +86,7 @@ bool HashOA<T, hash_t>::search(const T& val) const
     while (_table.at(hash_key) != std::nullopt)
     {
         if (_table.at(hash_key) == val) return true;
-        hash_key = (hash_key + 1) % table_size;
+        hash_key = increment(hash_key, table_size);
     }
     return false;
 }
@@ -101,7 +104,40 @@ void HashOA<T, hash_t>::print() const
     }
     std::cout << "|";
 
-    std:: cout << "  " << load() << std::endl;
+    std:: cout << "  Load: " << load() << std::endl;
+}
+
+template<class T, class hash_t>
+void HashOA<T, hash_t>::print_clusters_length() const
+{
+    size_t first_empty = 0;
+    while (_table[first_empty].has_value())
+        first_empty = increment(first_empty);
+    
+    auto start = increment(first_empty);
+    while (true)
+    {
+        while (!_table.at(start).has_value())
+        {
+            if (start == first_empty)
+            {
+                std::cout << std::endl;
+                return;
+            }
+
+            start = increment(start);
+        }
+
+        auto end = increment(start);
+        while (_table.at(end).has_value())
+            end = increment(end);
+        
+        if (start < end)
+            std::cout << (end - start) << ", ";
+        else
+            std::cout << (end + (_table.size() - start)) << ", ";
+        start = end;
+    }
 }
 
 template<class T, class hash_t>
@@ -125,7 +161,7 @@ void HashOA<T, hash_t>::_insert(const T& val, std::vector<std::optional<T>>& tab
 {
     auto hash_key = hash(val, table.size());
     while (table.at(hash_key) != std::nullopt)
-        hash_key = (hash_key + 1) % table.size(); 
+        hash_key = increment(hash_key, table.size());
 
     table[hash_key] = val;
 }
@@ -139,16 +175,14 @@ void HashOA<T, hash_t>::_remove(size_t to_remove_ndx, std::vector<std::optional<
 
     table.at(to_remove_ndx) = std::nullopt;
 
-    auto incr_cyclic = [table_size](size_t pos) { return (pos + 1) % table_size; };
-
-    auto replacement_ndx = incr_cyclic(to_remove_ndx);
+    auto replacement_ndx = increment(to_remove_ndx, table_size);
     while (table.at(replacement_ndx).has_value())
     {
         auto replacement_value = table.at(replacement_ndx).value();
         auto replacement_hash = hash(replacement_value, table_size);
         if (replacement_hash == replacement_ndx)
         {
-            replacement_ndx = incr_cyclic(replacement_ndx);
+            replacement_ndx = increment(replacement_ndx, table_size);
             continue;
         }
 
@@ -161,7 +195,7 @@ void HashOA<T, hash_t>::_remove(size_t to_remove_ndx, std::vector<std::optional<
             return _remove(replacement_ndx, table);
         }
         
-        replacement_ndx = incr_cyclic(replacement_ndx);
+        replacement_ndx = increment(replacement_ndx, table_size);
     }
 }
 
