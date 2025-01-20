@@ -1,5 +1,4 @@
 #include <vector>
-#include <cmath>
 
 #include "HashTableOA.h"
 
@@ -11,7 +10,7 @@ int main()
     std::vector<int> points{};
     for (auto i = 0; i < point_count; ++i)
     {
-        points.push_back(rand() % dim_range);
+        points.push_back(std::rand() % dim_range);
     }
 
     HashOA<int> ht(15);
@@ -21,4 +20,9 @@ int main()
         ht.print();
     }
 
+    for (auto p : points)
+    {
+        ht.remove(p);
+        ht.print();
+    }
 }

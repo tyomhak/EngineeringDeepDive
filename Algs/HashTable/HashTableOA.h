@@ -22,21 +22,22 @@ public:
 
 private:
     void _insert(const T& val, std::vector<std::optional<T>>& table);
-    void _remove(const T& val, std::vector<std::optional<T>>& table);
+    void _remove(size_t hash_key, std::vector<std::optional<T>>& table);
 
-    size_t hash(const T& key, size_t max_val) const { return hash_t()(key) % max_val; }
+    size_t hash(const T& key, size_t upper_bound) const { return hash_t()(key) % upper_bound; }
 
     void rehash()
     {
         const float max_load = 0.75f;
-        const float min_load = 0.3f;
+        const float min_load = 0.25f;
+
         const float upscale = 2.0f;
         const float downscale = 0.5f;
 
         float curr_load = load();
         if (curr_load > max_load)
             rehash(upscale);
-        if (_table.size() > _min_size && curr_load < min_load)
+        else if (curr_load < min_load)
             rehash(downscale);
     }
     void rehash(float coefficient);
@@ -51,7 +52,7 @@ private:
 
 private:
     std::vector<std::optional<T>> _table;
-    const int _min_size = 8;
+    const size_t _min_size = 8;
 };
 
 
@@ -66,7 +67,12 @@ void HashOA<T, hash_t>::insert(const T& val)
 template<class T, class hash_t>
 void HashOA<T, hash_t>::remove(const T& val) 
 { 
-    return _remove(val, _table);
+    rehash();
+
+    auto hash_key = hash(val, _table.size());
+    while (_table.at(hash_key) != val)
+        hash_key = (hash_key + 1) % _table.size();
+    return _remove(hash_key, _table);
 }
 
 template<class T, class hash_t>
@@ -101,7 +107,9 @@ void HashOA<T, hash_t>::print() const
 template<class T, class hash_t>
 void HashOA<T, hash_t>::rehash(float coefficient)
 {
-    size_t new_table_size = size_t(_table.size() * coefficient);
+    size_t new_table_size = std::max(size_t((float)_table.size() * coefficient), _min_size);
+    if (new_table_size == _table.size()) return;
+
     std::vector<std::optional<T>> new_table(new_table_size, std::nullopt);
     for (auto& val_opt : _table)
     {
@@ -123,22 +131,39 @@ void HashOA<T, hash_t>::_insert(const T& val, std::vector<std::optional<T>>& tab
 }
 
 template<class T, class hash_t>
-void HashOA<T, hash_t>::_remove(const T& val, std::vector<std::optional<T>>& table)
+void HashOA<T, hash_t>::_remove(size_t to_remove_ndx, std::vector<std::optional<T>> &table)
 {
     auto table_size = table.size();
-    auto hash_key = hash(val, table_size);
-    if (table.at(hash_key).has_value())
+    if (!table.at(to_remove_ndx).has_value())
+        return;
+
+    table.at(to_remove_ndx) = std::nullopt;
+
+    auto incr_cyclic = [table_size](size_t pos) { return (pos + 1) % table_size; };
+
+    auto replacement_ndx = incr_cyclic(to_remove_ndx);
+    while (table.at(replacement_ndx).has_value())
     {
-        table.at(hash_key) = std::nullopt;
-
-        auto repl_key = (hash_key + 1) % table_size;
-        while (table.at(repl_key) != std::nullopt)
+        auto replacement_value = table.at(replacement_ndx).value();
+        auto replacement_hash = hash(replacement_value, table_size);
+        if (replacement_hash == replacement_ndx)
         {
-            auto curr_val = table.at(repl_key).value();
-            auto curr_val_key = hash(curr_val, table_size);
-            // if (curr_val_key < )
-
-            repl_key = (repl_key + 1) % table_size;
+            replacement_ndx = incr_cyclic(replacement_ndx);
+            continue;
         }
+
+        if ((replacement_hash <= to_remove_ndx && to_remove_ndx < replacement_ndx)
+            || (to_remove_ndx < replacement_ndx && replacement_ndx < replacement_hash)
+            || (replacement_ndx < replacement_hash && replacement_hash <= to_remove_ndx)
+            ) 
+        {
+            table.at(to_remove_ndx) = replacement_value;
+            return _remove(replacement_ndx, table);
+        }
+        
+        replacement_ndx = incr_cyclic(replacement_ndx);
     }
 }
+
+
+
