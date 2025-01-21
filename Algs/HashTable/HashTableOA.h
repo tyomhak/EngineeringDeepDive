@@ -2,9 +2,10 @@
 #include <optional>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 
-template<class T, class hash_t = std::hash<T>>
+template<class T, class hash_t = std::hash<T>, bool lazy_rehash = false>
 class HashOA
 {
 public:
@@ -24,25 +25,13 @@ public:
 private:
     void _insert(const T& val, std::vector<std::optional<T>>& table);
     void _remove(size_t hash_key, std::vector<std::optional<T>>& table);
+    int _search(const T& val, const std::vector<std::optional<T>>& table);
 
     size_t hash(const T& key, size_t upper_bound) const { return hash_t()(key) % upper_bound; }
     size_t increment(size_t index) const { return increment(index, _table.size()); }
     size_t increment(size_t index, size_t upper_bound) const { return (index + 1) % upper_bound; }
     
-    void rehash()
-    {
-        const float max_load = 0.75f;
-        const float min_load = 0.25f;
-
-        const float upscale = 2.0f;
-        const float downscale = 0.5f;
-
-        float curr_load = load();
-        if (curr_load > max_load)
-            rehash(upscale);
-        else if (curr_load < min_load)
-            rehash(downscale);
-    }
+    void rehash();
     void rehash(float coefficient);
     
     float load() const 
@@ -52,47 +41,53 @@ private:
         return load;
     }
 
+    bool lazy_rehash_running() const { return _new_table != nullptr; }
+
 
 private:
     std::vector<std::optional<T>> _table;
     const size_t _min_size = 8;
+
+    std::unique_ptr<std::vector<std::optional<T>>> _new_table{nullptr};
 };
 
 
 
-template<class T, class hash_t>
-void HashOA<T, hash_t>::insert(const T& val) 
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::insert(const T& val) 
 { 
     rehash();
-    return _insert(val, _table); 
+    return _insert(val, lazy_rehash_running() ? *_new_table : _table); 
 }
 
-template<class T, class hash_t>
-void HashOA<T, hash_t>::remove(const T& val) 
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::remove(const T& val) 
 { 
     rehash();
 
-    auto hash_key = hash(val, _table.size());
-    while (_table.at(hash_key) != val)
-        hash_key = increment(hash_key);
-    return _remove(hash_key, _table);
-}
-
-template<class T, class hash_t>
-bool HashOA<T, hash_t>::search(const T& val) const
-{
-    auto table_size = _table.size();
-    auto hash_key = hash(val, table_size);
-    while (_table.at(hash_key) != std::nullopt)
+    if (lazy_rehash_running())
     {
-        if (_table.at(hash_key) == val) return true;
-        hash_key = increment(hash_key, table_size);
+        if (auto index = _search(val, *_new_table); index != -1)
+            _remove(index, *_new_table);
     }
+
+    if (auto index = _search(val, _table); index != -1)
+        _remove(index, _table);
+}
+
+template<class T, class hash_t, bool lazy_rehash>
+bool HashOA<T, hash_t, lazy_rehash>::search(const T& val) const
+{
+    if (lazy_rehash_running() && _search(val, *_new_table) != -1)
+        return true;
+    if (auto index = _search(val, _table); index != -1)
+        return true;
+
     return false;
 }
 
-template<class T, class hash_t>
-void HashOA<T, hash_t>::print() const
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::print() const
 {
     std::cout << "|";
     for (const auto& i : _table)
@@ -107,8 +102,8 @@ void HashOA<T, hash_t>::print() const
     std:: cout << "  Load: " << load() << std::endl;
 }
 
-template<class T, class hash_t>
-void HashOA<T, hash_t>::print_clusters_length() const
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::print_clusters_length() const
 {
     size_t first_empty = 0;
     while (_table[first_empty].has_value())
@@ -140,8 +135,77 @@ void HashOA<T, hash_t>::print_clusters_length() const
     }
 }
 
-template<class T, class hash_t>
-void HashOA<T, hash_t>::rehash(float coefficient)
+
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::rehash()
+{
+    const float max_load = 0.75f;
+    const float min_load = 0.25f;
+
+    const float upscale = 2.0f;
+    const float downscale = 0.5f;
+
+    if (lazy_rehash)
+    {
+        if (lazy_rehash_running())
+        {
+            int val_count_to_rehash = 5;
+            int rehashed_count = 0;
+            for (int i = 0; i < _table.size(); ++i)
+            {
+                if (_table.at(i).has_value())
+                {
+                    _insert(_table.at(i).value(), *_new_table);
+                    _remove(i, _table);
+                    rehashed_count++;
+
+                    if (rehashed_count >= val_count_to_rehash)
+                        break;
+                }
+            }
+
+            if (rehashed_count == 0)
+            {
+                std::swap(_table, *_new_table);
+                _new_table.reset();
+            }
+        }
+        else
+        {
+            auto start_lazy_rehash = [this](float coefficient)
+            {
+                size_t new_table_size = std::max(size_t((float)_table.size() * coefficient), _min_size);
+                if (new_table_size == _table.size()) return;
+
+                _new_table.reset(new std::vector<std::optional<T>>(new_table_size, std::nullopt));
+                rehash();
+            };
+
+            float curr_load = load();
+            if (curr_load > max_load)
+                start_lazy_rehash(upscale);
+            else if (curr_load < min_load)
+                start_lazy_rehash(downscale);
+        }
+    }
+    else
+    {
+        const float max_load = 0.75f;
+        const float min_load = 0.25f;
+
+        const float upscale = 2.0f;
+        const float downscale = 0.5f;
+
+        float curr_load = load();
+        if (curr_load > max_load)
+            rehash(upscale);
+        else if (curr_load < min_load)
+            rehash(downscale);
+    }
+}
+
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::rehash(float coefficient)
 {
     size_t new_table_size = std::max(size_t((float)_table.size() * coefficient), _min_size);
     if (new_table_size == _table.size()) return;
@@ -156,8 +220,8 @@ void HashOA<T, hash_t>::rehash(float coefficient)
     std::swap(_table, new_table);
 }
 
-template<class T, class hash_t>
-void HashOA<T, hash_t>::_insert(const T& val, std::vector<std::optional<T>>& table)
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::_insert(const T& val, std::vector<std::optional<T>>& table)
 {
     auto hash_key = hash(val, table.size());
     while (table.at(hash_key) != std::nullopt)
@@ -166,8 +230,8 @@ void HashOA<T, hash_t>::_insert(const T& val, std::vector<std::optional<T>>& tab
     table[hash_key] = val;
 }
 
-template<class T, class hash_t>
-void HashOA<T, hash_t>::_remove(size_t to_remove_ndx, std::vector<std::optional<T>> &table)
+template<class T, class hash_t, bool lazy_rehash>
+void HashOA<T, hash_t, lazy_rehash>::_remove(size_t to_remove_ndx, std::vector<std::optional<T>> &table)
 {
     auto table_size = table.size();
     if (!table.at(to_remove_ndx).has_value())
@@ -199,5 +263,21 @@ void HashOA<T, hash_t>::_remove(size_t to_remove_ndx, std::vector<std::optional<
     }
 }
 
+template<class T, class hash_t, bool lazy_rehash>
+int HashOA<T, hash_t, lazy_rehash>::_search(const T& val, const std::vector<std::optional<T>>& table)
+{
+    auto table_size = table.size();
+    auto hash_key = hash(val, table_size);
 
+    for (int i = 0; i < table_size; ++i)
+    {
+        if (table.at(hash_key) == val)
+            return hash_key;
+        if (!table.at(hash_key).has_value())
+            break;
+
+        hash_key = increment(hash_key);
+    }
+    return -1;
+}
 
