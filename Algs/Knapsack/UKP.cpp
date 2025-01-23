@@ -10,12 +10,13 @@ class unbounded_knapsack
 public:
     unbounded_knapsack(const std::vector<std::pair<int,int>>& weight_value_pairs);
     unbounded_knapsack(const std::vector<int>& weights, const std::vector<int>& values);
+    virtual ~unbounded_knapsack() = default;
 
     int max_value(int max_weight);
     std::vector<int> max_value_path(int max_weight);
     std::map<int, int> item_count(int max_weight);
 
-private:
+protected:
     size_t item_count() const { return _weights.size(); }
 
     int weight(int index) const { return _weights.at(index); }
@@ -46,7 +47,9 @@ unbounded_knapsack::unbounded_knapsack(const std::vector<std::pair<int,int>>& we
 unbounded_knapsack::unbounded_knapsack(const std::vector<int>& weights, const std::vector<int>& values)
 : _weights(weights)
 , _values(values)
-{}
+{
+    _best_values[0] = 0;
+}
 
 
 int unbounded_knapsack::max_value(int max_weight)
@@ -81,11 +84,10 @@ std::vector<int> unbounded_knapsack::max_value_path(int max_weight)
 {
     std::vector<int> path{};
 
-    if (_prev_index.empty())
+    if (_prev_index.count(max_weight) == 0)
         max_value(max_weight); // to fill data.
 
     int curr_weight = max_weight;
-
     while (curr_weight > 0)
     {
         if (_prev_index.count(curr_weight) == 0)
@@ -102,10 +104,10 @@ std::vector<int> unbounded_knapsack::max_value_path(int max_weight)
 
 std::map<int, int> unbounded_knapsack::item_count(int max_weight)
 {
-    if (_prev_index.empty())
-        max_value(max_weight); // to fill data.
-
     std::map<int,int> item_count{};
+
+    if (_prev_index.count(max_weight) == 0)
+        max_value(max_weight); // to fill data.
 
     int curr_weight = max_weight;
     while (curr_weight > 0)
@@ -126,6 +128,51 @@ std::map<int, int> unbounded_knapsack::item_count(int max_weight)
 }
 
 
+class unbounded_knapsack_dp : public unbounded_knapsack
+{
+public:
+    unbounded_knapsack_dp(int max_weight, const std::vector<std::pair<int,int>>& weight_value_pairs) 
+    : unbounded_knapsack(weight_value_pairs)
+    {
+        fill_results(max_weight);
+    }
+
+    unbounded_knapsack_dp(int max_weight, const std::vector<int>& weights, const std::vector<int>& values)
+    : unbounded_knapsack(weights, values)
+    {
+        fill_results(max_weight);
+    }
+
+private:
+    void fill_results(int max_weight)
+    {
+        for (int curr_weight = 0; curr_weight <= max_weight; ++curr_weight)
+        {
+            int best_value = 0;
+            int added_index = -1;
+
+            for (int item_index = 0; item_index < item_count(); ++item_index)
+            {
+                auto prev_weight = curr_weight - weight(item_index);
+                if (prev_weight < 0) continue;
+
+                auto curr_value = _best_values[prev_weight] + value(item_index);
+                if (curr_value > best_value)
+                {
+                    best_value = curr_value;
+                    added_index = item_index;
+                }
+            }
+
+            _best_values[curr_weight] = best_value;
+            _prev_index[curr_weight] = added_index;
+        }
+    }
+};
+
+
+
+
 int main(int argc, char *argv[])
 {
     int max_weight = 12;
@@ -142,15 +189,27 @@ int main(int argc, char *argv[])
         {11, 3},
     };
     
+    {
+        unbounded_knapsack uks(items);
+        std::cout << uks.max_value(max_weight) << std::endl;
 
-    unbounded_knapsack uks(items);
-    std::cout << uks.max_value(max_weight) << std::endl;
+        for (auto [ndx, count] : uks.item_count(max_weight))
+            std::cout << "w: " << items[ndx].first 
+                      << ", val: " << items[ndx].second 
+                      << ", count: " << count 
+                      << std::endl;
+    }
+    
+    std::cout << "\n=============================================\n\n";
 
-    auto path = uks.max_value_path(max_weight);
-    for (auto ndx : path)
-        std::cout << "w: " << items[ndx].first << ", val: " << items[ndx].second << std::endl;
-    std::cout << "__________________________________\n";
-
-    for (auto [ndx, count] : uks.item_count(max_weight))
-        std::cout << "w: " << items[ndx].first << ", val: " << items[ndx].second << ", count: " << count << std::endl;
+    {
+        unbounded_knapsack_dp uks(max_weight, items);
+        std::cout << uks.max_value(max_weight) << std::endl;
+        
+        for (auto [ndx, count] : uks.item_count(max_weight))
+            std::cout << "w: " << items[ndx].first 
+                      << ", val: " << items[ndx].second 
+                      << ", count: " << count 
+                      << std::endl;
+    }
 }
