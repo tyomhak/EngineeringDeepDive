@@ -58,101 +58,45 @@ int knapsack_01_memo(const std::vector<Item>& items, int max_weight) {
     return get_max(items.size() - 1, max_weight);
 }
 
-
-
-class knapsack_01
+std::vector<Item> knapsack_01_items_dp(const std::vector<Item>& items, int max_weight)
 {
-public:
-    knapsack_01(const std::vector<std::pair<int,int>>& weight_value_pairs, int max_weight)
-    {
-        for (auto [weight, value] : weight_value_pairs)
-        {
-            _weights.push_back(weight);
-            _values.push_back(value);
-        }
+    std::vector<std::vector<int>> table(items.size() + 1, std::vector<int>(max_weight + 1, 0));
+    std::map<int, Item> used_items{};
 
-        fill_max_value_table(max_weight);
-    }
-    knapsack_01(const std::vector<int>& weights, const std::vector<int>& values, int max_weight)
-    : _weights(weights)
-    , _values(values)
-    {
-        fill_max_value_table(max_weight);
-    }
+    for (int item_ndx = 1; item_ndx < table.size(); ++item_ndx) {
+        for (int weight = 1; weight < max_weight + 1; ++weight) {
+            table[item_ndx][weight] = table[item_ndx - 1][weight];
 
-    int max_value(int weight) { return _max_value_table[_weights.size() - 1][weight]; }
-    int max_value_items();
-
-private:
-    int weight(int item_index) const { return _weights.at(item_index); }
-    int value(int item_index) const { return _values.at(item_index); }
-
-    void fill_max_value_table(int max_weight)
-    {
-        while (_max_value_table.size() < _weights.size())
-            _max_value_table.push_back(std::vector<int>(max_weight, 0));
-        
-        for (auto &row : _max_value_table)
-        {
-            while (row.size() <= max_weight)
-                row.push_back(0);
-        }
-
-
-        for (int curr_weight = 0; curr_weight <= max_weight; ++curr_weight)
-        {
-            for (int item = 0; item < _weights.size(); ++item)
-            {
-                if (weight(item) >= curr_weight)
-                    _max_value_table[item][curr_weight] = max_value(curr_weight, item - 1);
-                else
-                    _max_value_table[item][curr_weight] = std::max(
-                        max_value(curr_weight, item - 1),
-                        max_value(curr_weight - weight(item)) + value(item)
-                    );
+            if (items[item_ndx - 1].weight <= weight) {
+                auto with_item_value = table[item_ndx - 1][weight - items[item_ndx - 1].weight] + items[item_ndx - 1].value;
+                if (table[item_ndx][weight] < with_item_value) {
+                    table[item_ndx][weight] < with_item_value;
+                    used_items[weight] = items.at(item_ndx - 1);
+                }
             }
         }
     }
 
-
-    int max_value(int weight, int up_to_index)
-    {
-        if (weight <= 0 || up_to_index < 0) return 0;
-        return _max_value_table[up_to_index][weight];
+    std::vector<Item> result_items{};
+    auto item_ndx = used_items.at(max_weight);
+    auto curr_weight = max_weight;
+    while (curr_weight > 0 && used_items.count(curr_weight)) {
+        result_items.push_back(used_items.at(curr_weight));
+        curr_weight -= used_items.at(curr_weight).weight;
     }
-
-
-private:
-    std::vector<int> _weights;
-    std::vector<int> _values;
-
-    std::vector<std::vector<int>> _max_value_table{}; // [up to item index][max weight]
-};
-
-
-
-
-
-
+    return result_items;
+}
 
 
 
 int main(int argc, char *argv[])
 {
-    int max_weight = 7;
+    int max_weight = 15;
     if (argc > 1)
     {
         std::string param(argv[1]);
         max_weight = std::stoi(param);
     }
-
-    // std::vector<std::pair<int,int>> items {
-    //     {2, 1},
-    //     {3, 4},
-    //     {5, 8},
-    //     {11, 3},
-    // };
-
     std::vector<Item> items{
         {2, 1},
         {3, 4},
@@ -163,14 +107,17 @@ int main(int argc, char *argv[])
     std::cout << knapsack_01(items, max_weight) << std::endl;
     std::cout << knapsack_01_memo(items, max_weight) << std::endl;
     
-    {
-        // knapsack_01 uks(items, max_weight);
-        // std::cout << uks.max_value(max_weight) << std::endl;
-
-        // for (auto [ndx, count] : uks.item_count(max_weight))
-        //     std::cout << "w: " << items[ndx].first 
-        //               << ", val: " << items[ndx].second 
-        //               << ", count: " << count 
-        //               << std::endl;
+    auto result_items = knapsack_01_items_dp(items, max_weight);
+    auto result_value = 0;
+    auto result_weight = 0;
+    for (auto item : result_items) {
+        std::cout << "{" << item.weight << ", " << item.value << "}";
+        result_value += item.value;
+        result_weight += item.weight;
     }
+    std::cout << std::endl;
+    std::cout << "Value: " << result_value << "\n";
+    std::cout << "Weight: " << result_weight << "\n";
+
+    
 }
