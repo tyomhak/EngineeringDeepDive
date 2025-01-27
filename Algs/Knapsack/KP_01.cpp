@@ -61,7 +61,7 @@ int knapsack_01_memo(const std::vector<Item>& items, int max_weight) {
 std::vector<Item> knapsack_01_items_dp(const std::vector<Item>& items, int max_weight)
 {
     std::vector<std::vector<int>> table(items.size() + 1, std::vector<int>(max_weight + 1, 0));
-    std::map<int, Item> used_items{};
+    std::vector<std::vector<int>> item_at_weight(items.size() + 1, std::vector<int>(max_weight + 1, -1));
 
     for (int item_ndx = 1; item_ndx < table.size(); ++item_ndx) {
         for (int weight = 1; weight < max_weight + 1; ++weight) {
@@ -70,19 +70,30 @@ std::vector<Item> knapsack_01_items_dp(const std::vector<Item>& items, int max_w
             if (items[item_ndx - 1].weight <= weight) {
                 auto with_item_value = table[item_ndx - 1][weight - items[item_ndx - 1].weight] + items[item_ndx - 1].value;
                 if (table[item_ndx][weight] < with_item_value) {
-                    table[item_ndx][weight] < with_item_value;
-                    used_items[weight] = items.at(item_ndx - 1);
+                    table[item_ndx][weight] = with_item_value;
+                    item_at_weight[item_ndx][weight] = item_ndx;
                 }
             }
         }
     }
 
     std::vector<Item> result_items{};
-    auto item_ndx = used_items.at(max_weight);
     auto curr_weight = max_weight;
-    while (curr_weight > 0 && used_items.count(curr_weight)) {
-        result_items.push_back(used_items.at(curr_weight));
-        curr_weight -= used_items.at(curr_weight).weight;
+    auto item_ndx = items.size();
+    while (curr_weight > 0 && item_ndx > 0) {
+        if (item_at_weight[item_ndx][curr_weight] == -1)
+        {
+            item_ndx -=1;
+            continue;
+        }
+        else
+        {
+            auto item = items.at(item_at_weight[item_ndx][curr_weight] - 1);
+            result_items.push_back(item);
+
+            auto new_weight = curr_weight -= item.weight;
+            item_ndx -= 1;
+        }
     }
     return result_items;
 }
