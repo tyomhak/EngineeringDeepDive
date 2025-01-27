@@ -12,7 +12,7 @@ struct Item
     int value;
 };
 
-int knapsack_01(const std::vector<Item>& items, int max_weight)
+int knapsack_01_dp(const std::vector<Item>& items, int max_weight)
 {
     std::vector<std::vector<int>> table(items.size() + 1, std::vector<int>(max_weight + 1, 0));
 
@@ -115,14 +115,15 @@ int main(int argc, char *argv[])
         {11, 3}
     };
 
-    std::cout << knapsack_01(items, max_weight) << std::endl;
-    std::cout << knapsack_01_memo(items, max_weight) << std::endl;
+    std::cout << "DP: " << knapsack_01_dp(items, max_weight) << std::endl;
+    std::cout << "Memo: " << knapsack_01_memo(items, max_weight) << std::endl;
     
     auto result_items = knapsack_01_items_dp(items, max_weight);
     auto result_value = 0;
     auto result_weight = 0;
+    std::cout << "\nItems {weight, value}: ";
     for (auto item : result_items) {
-        std::cout << "{" << item.weight << ", " << item.value << "}";
+        std::cout << "{" << item.weight << ", " << item.value << "}, ";
         result_value += item.value;
         result_weight += item.weight;
     }
