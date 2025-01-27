@@ -115,13 +115,19 @@ int main(int argc, char *argv[])
         {11, 3}
     };
 
+    std::cout << "Max Weight: " << max_weight << "\n";
+    std::cout << "All Items {weight, value}: ";
+    for (auto item : items)
+        std::cout << "{" << item.weight << ", " << item.value << "}, ";
+    std::cout << "\n\n";
+
     std::cout << "DP: " << knapsack_01_dp(items, max_weight) << std::endl;
     std::cout << "Memo: " << knapsack_01_memo(items, max_weight) << std::endl;
     
     auto result_items = knapsack_01_items_dp(items, max_weight);
     auto result_value = 0;
     auto result_weight = 0;
-    std::cout << "\nItems {weight, value}: ";
+    std::cout << "\nUsed Items {weight, value}: ";
     for (auto item : result_items) {
         std::cout << "{" << item.weight << ", " << item.value << "}, ";
         result_value += item.value;
@@ -130,6 +136,4 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
     std::cout << "Value: " << result_value << "\n";
     std::cout << "Weight: " << result_weight << "\n";
-
-    
 }
