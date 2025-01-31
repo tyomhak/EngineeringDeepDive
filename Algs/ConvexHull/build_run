@@ -1,0 +1,3 @@
+#!/bin/bash
+g++ ./main.cpp -o myprogram `sdl2-config --cflags --libs` -g
+./myprogram
