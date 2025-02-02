@@ -1,11 +1,13 @@
 #include "Renderer.h"
 
-using namespace renderer;
+namespace renderer
+{
 
-SDL_Point operator+(const SDL_Point& l, const SDL_Point& r) { return SDL_Point{l.x + r.x, l.y + r.y}; }
-SDL_Point operator-(const SDL_Point& l, const SDL_Point& r) { return SDL_Point{l.x - r.x, l.y - r.y}; }
-SDL_Point operator*(const SDL_Point& p, float scale) { return SDL_Point{ (int)(float(p.x) * scale), (int)(float(p.y) * scale)}; }
-SDL_Point operator/(const SDL_Point& p, float scale) { return p * (1.0 / scale); }
+bool operator==(const Point& l, const Point& r) { return l.x == r.x && l.y == r.y; }
+Point operator+(const Point& l, const Point& r) { return Point{l.x + r.x, l.y + r.y}; }
+Point operator-(const Point& l, const Point& r) { return Point{l.x - r.x, l.y - r.y}; }
+Point operator*(const Point& p, float scale) { return Point{ (int)(float(p.x) * scale), (int)(float(p.y) * scale)}; }
+Point operator/(const Point& p, float scale) { return p * (1.0 / scale); }
 
 RenderEngine::RenderEngine()
 {
@@ -27,11 +29,19 @@ void RenderEngine::run()
     while (!_quit)
     {
         SDL_PollEvent(&_event);
-        if (_event.type == SDL_QUIT)
+        switch (_event.type)
         {
+        case SDL_QUIT:
             _quit = true;
             break;
+        case SDL_WINDOWEVENT_RESIZED:
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+            request_redraw();
+            break;
+        default:
+            break;
         }
+
         handle_input(_event);
         render();
     }        
@@ -45,7 +55,7 @@ RenderEngine::Color RenderEngine::set_color(const Color& new_color)
     return prev_color;
 }
 
-void RenderEngine::fill_screen(const Color& color)
+void RenderEngine::clear_screen(const Color& color)
 {
     auto prev_color = set_color(color);
     SDL_RenderClear(_renderer);
@@ -63,6 +73,17 @@ void RenderEngine::draw_point(const Point& point)
 void RenderEngine::draw_line(const Point& from, const Point& to)
 {
     SDL_RenderDrawLine(_renderer, from.x, from.y, to.x, to.y);
+}
+
+void RenderEngine::draw_lines(const std::vector<Point>& points)
+{
+    if (points.size() < 2) return;
+    
+    for (auto i = 0; i < points.size() - 1; ++i)
+    {
+        draw_line(points.at(i), points.at(i + 1));
+    }
+    draw_line(points.at(points.size() - 1), points.at(0));
 }
 
 void RenderEngine::draw_circle(const Point& center, int radius)
@@ -107,8 +128,10 @@ void RenderEngine::render()
 {
     if (_needs_redraw)
     {
+        _needs_redraw = false;
         on_draw();
         SDL_RenderPresent(_renderer);
-        _needs_redraw = false;
     }
+}
+
 }

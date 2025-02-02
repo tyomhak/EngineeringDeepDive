@@ -1,15 +1,17 @@
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <memory>
 #include <algorithm>
 
 #include "Renderer.h"
 
+using namespace renderer;
+
 class ConvexHull : public renderer::RenderEngine
 {
 public:
     using RenderEngine::RenderEngine;
-    using Point = SDL_Point;
 
     // check for user input, and update state
     void handle_input(const SDL_Event& event) override
@@ -31,7 +33,8 @@ public:
     // override with custom rendering
     void on_draw() override
     {
-        fill_screen(Color::Black());
+        clear_screen(Color::Black());
+        draw_point(Point{10, 10});
         draw_points();
         if (_points.size() > 3)
             draw_hull();
@@ -42,7 +45,7 @@ private:
     {
         auto prev_col = set_color(Color::Green());
         for (auto& point : _points)
-            draw_circle(point, 15);      
+            draw_circle(point, 5);      
 
         set_color(prev_col);
     }
@@ -64,51 +67,70 @@ private:
 
     std::vector<Point> get_hull_points()
     {
+        const int animation_step = 200;
         auto hull_points = _points;
-        SDL_Point origin{0,0};
-        for (auto& p : hull_points)
-            origin = origin + p;
-        origin = origin / hull_points.size();
-        std::cout << origin.x << "," << origin.y << std::endl;
 
-        for (auto &point : hull_points)
-            point = point - origin;
-
-        std::sort(hull_points.begin(), hull_points.end(), [](const auto& l, const auto& r) { return atan2(l.y, l.x) < atan2(r.y, r.x); });
-        auto points_count = hull_points.size();
-
-        for (auto &point : hull_points)
+        auto lowest_point_ndx = 0;
+        for (int i = 0; i < hull_points.size(); ++i)
         {
-            draw_line(origin, point + origin);
-            SDL_RenderPresent(_renderer);
-            SDL_Delay(500);
+            if (hull_points.at(i).y < hull_points.at(lowest_point_ndx).y)
+                lowest_point_ndx = i;
         }
 
-        for (int i = 0; i < points_count; ++i)
+        Point origin = hull_points.at(lowest_point_ndx);
+        hull_points.erase(hull_points.begin() + lowest_point_ndx);
+        auto is_lower = [origin](const Point& l, const Point& r) {
+            return atan2(l.y - origin.y, l.x - origin.x) >= atan2(r.y - origin.y, r.x - origin.x); 
+        };
+        std::sort(hull_points.begin(), hull_points.end(), is_lower);
+        hull_points.insert(hull_points.begin(), origin);
+
+        std::vector<Point> st{};
+        st.push_back(hull_points.at(0));
+        st.push_back(hull_points.at(1));
+
+        for (int ndx = 2; ndx < hull_points.size(); ndx++)
         {
-            for (int j = i; j < hull_points.size(); ++j)
+            auto mid_point = st.back();
+            st.pop_back();
+            auto next_point = hull_points.at(ndx);
+            while (!st.empty() && turn_direction(st.back(), mid_point, next_point) > 0)
             {
-                auto p1_ndx = j == 0 ? 0 : hull_points.size() % j;
-                auto p2_ndx = hull_points.size() % (j + 1);
-                auto p3_ndx = hull_points.size() % (j + 2);
+                mid_point = st.back();
+                st.pop_back();
 
-                auto p1 = hull_points[p1_ndx];
-                auto p2 = hull_points[p2_ndx];
-                auto p3 = hull_points[p3_ndx];
-
-                if ((p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x) > 0)
-                {
-                    hull_points.erase(hull_points.begin() + p2_ndx);
-                    break;
-                }
+                clear_screen(Color::Black());
+                draw_lines(st);
+                draw_points();
+                force_redraw();
+                wait(animation_step);
             }
+            st.push_back(mid_point);
+            st.push_back(next_point);
+
+            clear_screen(Color::Black());
+            draw_lines(st);
+            draw_points();
+            force_redraw();
+            wait(animation_step);
         }
 
-        for (auto &point : hull_points)
-            point = point + origin;
-        
+        hull_points.clear();
+        while (!st.empty())
+        {
+            hull_points.push_back(st.back());
+            st.pop_back();
+        }
+
         return hull_points;
     }
+
+    int turn_direction(const Point &p1, const Point &p2, const Point &p3)
+    {
+        return (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x);
+    }
+
+    size_t cycl_next(size_t ndx, size_t size, size_t steps = 1) { return size % (ndx + steps); }
 
 private:
     std::vector<Point> _points{};
