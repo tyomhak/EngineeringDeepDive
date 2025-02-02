@@ -34,7 +34,6 @@ public:
     void on_draw() override
     {
         clear_screen(Color::Black());
-        draw_point(Point{10, 10});
         draw_points();
         if (_points.size() > 3)
             draw_hull();

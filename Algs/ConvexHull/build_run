@@ -1,3 +1,0 @@
-#!/bin/bash
-g++ ./main.cpp ./Renderer.cpp -o myprogram `sdl2-config --cflags --libs` -g
-# ./myprogram
