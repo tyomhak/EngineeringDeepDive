@@ -1,5 +1,6 @@
+#pragma once
+
 #include <vector>
-#include <algorithm>
 
 #include "Renderer.h"
 
@@ -34,7 +35,7 @@ public:
     {
         clear_screen(Color::Black());
         draw_points();
-        if (_points.size() > 3)
+        if (_points.size() > 2)
             draw_hull();
     }
 
@@ -54,6 +55,7 @@ protected:
     void draw_hull()
     {
         auto hull_points = get_hull_points();
+        if (hull_points.empty()) return;
 
         auto it = hull_points.begin();
         while (std::next(it) != hull_points.end())

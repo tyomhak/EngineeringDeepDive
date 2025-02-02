@@ -1,2 +1,2 @@
 #!/bin/bash
-g++ ./main.cpp ./Renderer.cpp -o convex_hull `sdl2-config --cflags --libs` -g
+g++ ./main.cpp ./Renderer.cpp -o convex_hull `sdl2-config --cflags --libs` -g --std=c++20

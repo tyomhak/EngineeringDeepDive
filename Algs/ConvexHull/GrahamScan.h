@@ -1,3 +1,6 @@
+#pragma once
+
+#include <algorithm>
 
 #include "ConvexHull.h"
 
@@ -12,7 +15,7 @@ public:
 protected:
     std::vector<Point> get_hull_points() override
     {
-        const int animation_step = 200;
+        const int animation_step = 100;
         auto hull_points = _points;
 
         auto lowest_point_ndx = 0;
@@ -70,7 +73,7 @@ protected:
         return hull_points;
     }
 
-    int turn_direction(const Point &p1, const Point &p2, const Point &p3)
+    int turn_direction(const Point& p1, const Point& p2, const Point& p3)
     {
         return (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x);
     }

@@ -55,7 +55,7 @@ RenderEngine::Color RenderEngine::set_color(const Color& new_color)
     return prev_color;
 }
 
-void RenderEngine::clear_screen(const Color& color)
+void RenderEngine::clear_screen(const Color& color /* = Color{0,0,0} */)
 {
     auto prev_color = set_color(color);
     SDL_RenderClear(_renderer);
