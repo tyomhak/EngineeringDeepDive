@@ -46,6 +46,15 @@ protected:
         if (distance(leftmost_point, rightmost_point, furthest_point) <= 0)
             return hull_points;
 
+        auto prev_col = set_color(Color::Red());
+        draw_line(leftmost_point, rightmost_point);
+        set_color(Color::Blue());
+        draw_line(leftmost_point, furthest_point);
+        draw_line(furthest_point, rightmost_point);
+        set_color(prev_col);
+        force_redraw();
+        wait(250);
+
         std::vector<Point> left_points;
         std::vector<Point> right_points;
 
@@ -88,21 +97,6 @@ protected:
         return float(((line_end.y - line_start.y) * point.x - (line_end.x - line_start.x) * point.y + line_end.x * line_start.y - line_end.y * line_start.x))
             / sqrtf( (line_end.y - line_start.y)*(line_end.y - line_start.y) + (line_end.x - line_start.x) * (line_end.x - line_start.x) );
     }
-
-    // bool point_inside_triangle(const Point& point, const Point& p1, const Point& p2, const Point& p3)
-    // {
-    //     float d1, d2, d3;
-    //     bool has_neg, has_pos;
-
-    //     d1 = sign(point, p1, p2);
-    //     d2 = sign(point, p2, p3);
-    //     d3 = sign(point, p3, p1);
-
-    //     has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-    //     has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-    //     return !(has_neg && has_pos);
-    // }
 
     float sign(Point p1, Point p2, Point p3)
     {
