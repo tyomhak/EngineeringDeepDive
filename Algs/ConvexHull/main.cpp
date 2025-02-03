@@ -11,9 +11,9 @@ int main(int argc, char ** argv)
     
     std::unique_ptr<renderer::ConvexHull> convex_hull_solver{nullptr};
     if (use_graham_scan)
-        convex_hull_solver.reset(new renderer::QuickHull());
-    else
         convex_hull_solver.reset(new renderer::GrahamScan());
+    else
+        convex_hull_solver.reset(new renderer::QuickHull());
 
     convex_hull_solver->run();
     return 0;

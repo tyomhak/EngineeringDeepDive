@@ -15,80 +15,66 @@ public:
 protected:
     std::vector<Point> get_hull_points() override
     {
-        auto hull_points = _points;
+        auto& points = _points;
         auto point_x = [](const Point& l, const Point& r){ return l.x < r.x; };
-        auto leftmost_point = *std::min_element(hull_points.begin(), hull_points.end(), point_x);
-        auto rightmost_point = *std::max_element(hull_points.begin(), hull_points.end(), point_x);
+        auto leftmost_point = *std::min_element(points.begin(), points.end(), point_x);
+        auto rightmost_point = *std::max_element(points.begin(), points.end(), point_x);
 
-        remove_points_inside_triangle(leftmost_point, rightmost_point, hull_points);
+        auto left_points = get_points_outside_triangle(leftmost_point, rightmost_point, points);
+        auto right_points = get_points_outside_triangle(rightmost_point, leftmost_point, points);
 
-        // auto furthest_point = *get_furthest_point(leftmost_point, rightmost_point, hull_points);
-        // for (auto point : hull_points)
-        // {
-        //     auto is_inside = [this, leftmost_point, rightmost_point, furthest_point](const Point& point)
-        //     {
-        //         return (point != leftmost_point) && (point != rightmost_point) && (point != furthest_point) &&
-        //             point_inside_triangle(point, leftmost_point, rightmost_point, furthest_point); 
-        //     };
-        //     std::erase_if(hull_points, is_inside);
-        // }
-
-
-
+        std::vector<Point> hull_points{};
+        hull_points.reserve(left_points.size() + right_points.size() + 2);
+        hull_points.push_back(leftmost_point);
+        std::copy(left_points.begin(), left_points.end(), std::back_inserter(hull_points));
+        hull_points.push_back(rightmost_point);
+        std::copy(right_points.begin(), right_points.end(), std::back_inserter(hull_points));
 
         return hull_points;
     }
 
-    void remove_points_inside_triangle(const Point& l, const Point& r, std::vector<Point>& points)
+    std::vector<Point> get_points_outside_triangle(const Point& l, const Point& r, const std::vector<Point>& points)
     {
+        std::vector<Point> hull_points{};
+        if (points.size() <= 2) return hull_points;
+
         auto point_x = [](const Point& l, const Point& r){ return l.x < r.x; };
-        auto leftmost_point = l; // *std::min_element(points.begin(), points.end(), point_x);
-        auto rightmost_point = r; // *std::max_element(points.begin(), points.end(), point_x);
+        auto leftmost_point = l;
+        auto rightmost_point = r;
 
         auto furthest_point = *get_furthest_point(leftmost_point, rightmost_point, points);
         if (distance(leftmost_point, rightmost_point, furthest_point) <= 0)
-            return;
+            return hull_points;
 
-        // auto prev_color = set_color()
-        draw_lines({leftmost_point, rightmost_point, furthest_point});
-        wait(200);
+        std::vector<Point> left_points;
+        std::vector<Point> right_points;
 
-        auto prev_col = set_color(Color::Black());
-        for (auto& point : points)
-            draw_point(point);
-        set_color(prev_col);
+        std::copy_if(
+            points.begin(), 
+            points.end(), 
+            std::back_inserter(left_points), 
+            [this, leftmost_point, rightmost_point, furthest_point](const Point& point) { 
+                return point != rightmost_point && point != furthest_point && sign(point, leftmost_point, furthest_point) > 0; 
+            }
+        );
 
-        for (auto point : points)
-        {
-            auto is_inside = [this, leftmost_point, rightmost_point, furthest_point](const Point& point)
-            {
-                return (point != leftmost_point) && (point != rightmost_point) && (point != furthest_point) &&
-                    point_inside_triangle(point, leftmost_point, rightmost_point, furthest_point); 
-            };
-            std::erase_if(points, is_inside);
-        }
+        std::copy_if(
+            points.begin(), 
+            points.end(), 
+            std::back_inserter(right_points), 
+            [this, leftmost_point, rightmost_point, furthest_point](const Point& point) { 
+                return point != leftmost_point && point != furthest_point && sign(point, furthest_point, rightmost_point) > 0; 
+            }
+        );
+        auto left_hull = get_points_outside_triangle(leftmost_point, furthest_point, points);
+        auto right_hull = get_points_outside_triangle(furthest_point, rightmost_point, points);
+        hull_points.reserve(left_hull.size() + right_hull.size() + 1);
 
-        for (auto& point : points)
-            draw_point(point);
-        wait(200);
+        hull_points.insert(hull_points.end(), left_hull.begin(), left_hull.end());
+        hull_points.insert(hull_points.end(), furthest_point);
+        hull_points.insert(hull_points.end(), right_hull.begin(), right_hull.end());
 
-        // // render for debug
-        // {
-        //     clear_screen();
-        //     draw_points();
-
-        //     auto prev_col = set_color(Color::Red());
-        //     draw_lines({leftmost_point, rightmost_point, furthest_point});
-        //     for (auto point : points)
-        //     {
-        //         draw_circle(point, 7);
-        //     }
-        //     set_color(prev_col);
-        //     force_redraw();
-        // }
-
-        remove_points_inside_triangle(leftmost_point, furthest_point, points);
-        remove_points_inside_triangle(furthest_point, rightmost_point, points);
+        return hull_points;
     }
 
     auto get_furthest_point(const Point& line_start, const Point& line_end, const std::vector<Point>& points) -> std::vector<Point>::const_iterator
@@ -103,20 +89,20 @@ protected:
             / sqrtf( (line_end.y - line_start.y)*(line_end.y - line_start.y) + (line_end.x - line_start.x) * (line_end.x - line_start.x) );
     }
 
-    bool point_inside_triangle(const Point& point, const Point& p1, const Point& p2, const Point& p3)
-    {
-        float d1, d2, d3;
-        bool has_neg, has_pos;
+    // bool point_inside_triangle(const Point& point, const Point& p1, const Point& p2, const Point& p3)
+    // {
+    //     float d1, d2, d3;
+    //     bool has_neg, has_pos;
 
-        d1 = sign(point, p1, p2);
-        d2 = sign(point, p2, p3);
-        d3 = sign(point, p3, p1);
+    //     d1 = sign(point, p1, p2);
+    //     d2 = sign(point, p2, p3);
+    //     d3 = sign(point, p3, p1);
 
-        has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+    //     has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    //     has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
-        return !(has_neg && has_pos);
-    }
+    //     return !(has_neg && has_pos);
+    // }
 
     float sign(Point p1, Point p2, Point p3)
     {
