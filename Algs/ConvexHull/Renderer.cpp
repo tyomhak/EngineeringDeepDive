@@ -12,7 +12,7 @@ Point operator/(const Point& p, float scale) { return p * (1.0 / scale); }
 RenderEngine::RenderEngine()
 {
     SDL_Init(SDL_INIT_VIDEO);
-    _window = SDL_CreateWindow("SDL2 line drawing",
+    _window = SDL_CreateWindow("Convex Hull",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
     _renderer = SDL_CreateRenderer(_window, -1, 0);
 }
