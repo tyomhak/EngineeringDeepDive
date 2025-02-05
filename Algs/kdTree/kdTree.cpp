@@ -1,12 +1,11 @@
 
 #include <iostream>
+#include <vector>
 #include <memory>
 #include <cstdlib>
 
-struct Point
-{
-    int x, y;
-};
+
+using Point = std::vector<int>;
 
 struct Node
 {
@@ -15,7 +14,8 @@ struct Node
     , point(p)
     {}
 
-    Point point{0,0};
+    // Point point{0,0};
+    Point point{};
 
     Node* parent{nullptr};
     std::unique_ptr<Node> l{nullptr};
@@ -26,6 +26,7 @@ struct Node
 class KD_Tree
 {
 public:
+
     void insert(const Point& point)
     {
         if (!head)
@@ -34,15 +35,15 @@ public:
             return;
         }
 
-        insert(head.get(), point, true);
+        insert(head.get(), point, 0);
     }
 
 
 
-    Point NNSearch(const Point& p)
-    {
+    // Point NNSearch(const Point& p)
+    // {
 
-    }
+    // }
 
     void debug_print()
     {
@@ -52,21 +53,25 @@ public:
 
 
 private:
-    Point NNSearch(const Point& p, const Node* head)
-    {
+    // Point NNSearch(const Point& p, const Node* head, float& min_distance, Node& closestPoint, bool is_hor)
+    // {
+    //     if (!head) return;
         
+    //     if (head->point.)
+    // }
+
+    // int square_distance(const Point& l, const Point& r) { return std::abs((l.x - r.x) * (l.x - r.x) + (l.y - r.y) * (l.y - r.y)); }
+
+    int smaller(const Point& l, const Point& r, int dimention)
+    {
+        return l[dimention] < r[dimention];
     }
 
-    void insert(Node* head, const Point& point, bool is_hor)
+    void insert(Node* head, const Point& point, int dimention)
     {
-        auto smaller_x = [](const Point& l, const Point& r) { return l.x < r.x; };
-        auto smaller_y = [](const Point& l, const Point& r) { return l.y < r.y; };
-
-        auto comp_op = is_hor ? smaller_x : smaller_y;
-
-        auto& ptr_ref = comp_op(point, head->point) ? head->l : head->r;
+        auto& ptr_ref = smaller(point, head->point, dimention) ? head->l : head->r;
         if (ptr_ref != nullptr)
-            insert(ptr_ref.get(), point, !is_hor);
+            insert(ptr_ref.get(), point, (dimention + 1) % point.size());
         else
             ptr_ref.reset(new Node(head, point));
     }
@@ -90,12 +95,15 @@ private:
             next_prefix = has_nodes_below ? "  ║     " : "        ";
         }
 
-        std::cout << prefix + curr_prefix << "(" << node->point.x << "," << node->point.y << ")" << std::endl;
+        std::cout << prefix + curr_prefix << "(";
+        for (auto it = node->point.begin(); it != (node->point.end() - 1); it++)
+            std::cout << *it << ",";
+        std::cout << *node->point.rbegin();
+        std::cout << ")" << std::endl;
 
         print(prefix + next_prefix, node->l.get(), true);
         print(prefix + next_prefix, node->r.get(), false);
     }
-
     
 
 private:
@@ -109,7 +117,7 @@ int main()
 
     for (int i = 0; i < 10; ++i)
     {
-        Point pt{ rand() % 30, rand() % 10};
+        Point pt{ rand() % 30, rand() % 30, rand() % 30};
         tree.insert(pt);
     }
 
