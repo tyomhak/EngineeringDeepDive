@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 
 
@@ -72,12 +73,11 @@ public:
     void insert(const Point& point)
     {
         if (!_head)
-        {
             _head.reset(new Node(nullptr, point));
-            return;
-        }
+        else
+            insert(_head.get(), point, 0);
 
-        insert(_head.get(), point, 0);
+        ++_size;
     }
 
 
@@ -112,6 +112,9 @@ public:
 
     std::vector<Point> RangeQuery(const Point& min_point, const Point& max_point)
     {
+        _range_visited_total = 0;
+        _range_visited_needlessly = 0;
+
         std::vector<Point> points_in_range{};
         if (!_head) 
             return points_in_range;
@@ -119,6 +122,13 @@ public:
         range_query(min_point, max_point, _head.get(), points_in_range, 0);
         return points_in_range;
     }
+
+    float previous_range_efficiency() const 
+    {
+        return 1.0f - (float)_range_visited_needlessly / (float)_range_visited_total;
+    }
+    size_t previous_range_misses() const { return _range_visited_needlessly; }
+    size_t previous_range_lookups() const { return _range_visited_total; }
 
 
 
@@ -128,12 +138,14 @@ public:
         print("", _head.get(), false);
     }
 
+    size_t size() const { return _size; }
+
 
 private:
 
-    void range_query(const Point& min_point, const Point& max_point, Node* node, std::vector<Point>& points_in_range, int dimention)
+    bool range_query(const Point& min_point, const Point& max_point, Node* node, std::vector<Point>& points_in_range, int dimention)
     {
-        if (!node) return;
+        if (!node) return false;
         auto& point = node->point;
 
         bool is_in_range = true;
@@ -149,16 +161,27 @@ private:
         if (is_in_range)
             points_in_range.push_back(point);
 
+        bool l_found{false};
+        bool r_found{false};
         
-        if (smaller(min_point, point, dimention) && smaller(point, max_point, dimention))
+        if (node->l && node->r && smaller(min_point, point, dimention) && smaller(point, max_point, dimention))
         {
-            range_query(min_point, max_point, node->l.get(), points_in_range, (dimention + 1) % point.size());
-            range_query(min_point, max_point, node->r.get(), points_in_range, (dimention + 1) % point.size());
+            l_found = range_query(min_point, max_point, node->l.get(), points_in_range, (dimention + 1) % point.size());
+            r_found = range_query(min_point, max_point, node->r.get(), points_in_range, (dimention + 1) % point.size());
         }
-        else if (smaller(max_point, point, dimention))
-            range_query(min_point, max_point, node->l.get(), points_in_range, (dimention + 1) % point.size());
-        else if (smaller(point, min_point, dimention))
-            range_query(min_point, max_point, node->r.get(), points_in_range, (dimention + 1) % point.size());
+        else if (node->l && smaller(max_point, point, dimention))
+            l_found = range_query(min_point, max_point, node->l.get(), points_in_range, (dimention + 1) % point.size());
+        else if (node->r && smaller(point, min_point, dimention))
+            r_found = range_query(min_point, max_point, node->r.get(), points_in_range, (dimention + 1) % point.size());
+
+
+        // stats collection
+        ++_range_visited_total;
+        bool points_found = is_in_range || l_found || r_found;
+        if (!points_found)
+            ++_range_visited_needlessly;
+
+        return points_found;
     }
 
     void insert(Node* head, const Point& point, int dimention)
@@ -254,14 +277,18 @@ private:
 
 private:
     std::unique_ptr<Node> _head{nullptr};
+    size_t _size{0};
+
+    size_t _range_visited_total{0};
+    size_t _range_visited_needlessly{0};
 };
 
 
 int main()
 {
     KD_Tree tree{};
-    int num_of_points = 100;
-    int max_val = 50;
+    int num_of_points = 300;
+    int max_val = 100;
 
     for (int i = 0; i < num_of_points; ++i)
     {
@@ -296,5 +323,10 @@ int main()
     std::cout << "Points inside: \n";
     for (auto point_inside : tree.RangeQuery(Point{10,10,10}, Point{30,30,30}))
         std::cout << "    " << point_inside << "\n";
-    std::cout << "\n\n";
+    std::cout << "\n";
+
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Searched through "  << (100.0f * (float)tree.previous_range_lookups() / (float)tree.size()) << "% of total nodes\n";
+    std::cout <<  100.0f * (float)tree.previous_range_misses() / (float)tree.previous_range_lookups() << "% of node visits were needless\n";
+
 }
