@@ -110,6 +110,18 @@ public:
         return results;
     }
 
+    std::vector<Point> RangeQuery(const Point& min_point, const Point& max_point)
+    {
+        std::vector<Point> points_in_range{};
+        if (!_head) 
+            return points_in_range;
+
+        range_query(min_point, max_point, _head.get(), points_in_range, 0);
+        return points_in_range;
+    }
+
+
+
     void debug_print()
     {
         if (!_head) return;
@@ -118,33 +130,44 @@ public:
 
 
 private:
-    void NNSearch(const Point& point, const Node* head, std::priority_queue<Point, std::vector<Point>, SquareDistComparator>& pq, int n, int dimention)
+
+    void range_query(const Point& min_point, const Point& max_point, Node* node, std::vector<Point>& points_in_range, int dimention)
     {
-         if (!head) return;
+        if (!node) return;
+        auto& point = node->point;
 
-        if (head->point.at(2) == 23)
-            bool debug_stop = true;
+        bool is_in_range = true;
+        for (auto dim = 0; dim < point.size(); ++dim)
+        {
+            if (smaller(max_point, point, dim) || smaller(point, min_point, dim))
+            {
+                is_in_range = false;
+                break;
+            }
+        }
 
-        pq.push(head->point);
-        while (pq.size() > n)
-            pq.pop();
+        if (is_in_range)
+            points_in_range.push_back(point);
 
-        bool is_left = smaller(head->point, point, dimention);
-        if (is_left)
-            NNSearch(point, head->l.get(), pq, n, (dimention + 1) % point.size());
+        
+        if (smaller(min_point, point, dimention) && smaller(point, max_point, dimention))
+        {
+            range_query(min_point, max_point, node->l.get(), points_in_range, (dimention + 1) % point.size());
+            range_query(min_point, max_point, node->r.get(), points_in_range, (dimention + 1) % point.size());
+        }
+        else if (smaller(max_point, point, dimention))
+            range_query(min_point, max_point, node->l.get(), points_in_range, (dimention + 1) % point.size());
+        else if (smaller(point, min_point, dimention))
+            range_query(min_point, max_point, node->r.get(), points_in_range, (dimention + 1) % point.size());
+    }
+
+    void insert(Node* head, const Point& point, int dimention)
+    {
+        auto& ptr_ref = smaller(point, head->point, dimention) ? head->l : head->r;
+        if (ptr_ref != nullptr)
+            insert(ptr_ref.get(), point, (dimention + 1) % point.size());
         else
-            NNSearch(point, head->r.get(), pq, n, (dimention + 1) % point.size());
-
-        if (is_left && head->r)
-        {
-            if (auto dim_dist = dimention_distance(head->r->point, point, dimention); sqrt(square_distance(pq.top(), point)) > (double)dim_dist || pq.size() < n)
-                NNSearch(point, head->r.get(), pq, n, (dimention + 1) % point.size());
-        }
-        else if (!is_left && head->l)
-        {
-            if (auto dim_dist = dimention_distance(head->l->point, point, dimention); sqrt(square_distance(pq.top(), point)) > (double)dim_dist || pq.size() < n)
-                NNSearch(point, head->l.get(), pq, n, (dimention + 1) % point.size());
-        }
+            ptr_ref.reset(new Node(head, point));
     }
 
     void NNSearch(const Point& point, const Node* head, int& min_sqr_distance, Point& closestPoint, int dimention)
@@ -166,28 +189,44 @@ private:
 
         if (smaller(head->point, point, dimention) && head->r)
         {
-            if (min_sqr_distance > dimention_distance(head->r->point, point, dimention))
+            if (auto dim_dist = dimention_distance(head->r->point, point, dimention); min_sqr_distance > dim_dist * dim_dist)
                 NNSearch(point, head->r.get(), min_sqr_distance, closestPoint, (dimention + 1) % point.size());
         }
         else if (head->l)
         {
-            if (min_sqr_distance > dimention_distance(head->l->point, point, dimention))
+            if (auto dim_dist = dimention_distance(head->l->point, point, dimention); min_sqr_distance > dim_dist * dim_dist)
                 NNSearch(point, head->l.get(), min_sqr_distance, closestPoint, (dimention + 1) % point.size());
         }
     }
 
-    
-
-    void insert(Node* head, const Point& point, int dimention)
+    void NNSearch(const Point& point, const Node* head, std::priority_queue<Point, std::vector<Point>, SquareDistComparator>& pq, int n, int dimention)
     {
-        auto& ptr_ref = smaller(point, head->point, dimention) ? head->l : head->r;
-        if (ptr_ref != nullptr)
-            insert(ptr_ref.get(), point, (dimention + 1) % point.size());
+         if (!head) return;
+
+        if (head->point.at(2) == 23)
+            bool debug_stop = true;
+
+        pq.push(head->point);
+        while (pq.size() > n)
+            pq.pop();
+
+        bool is_left = smaller(head->point, point, dimention);
+        if (is_left)
+            NNSearch(point, head->l.get(), pq, n, (dimention + 1) % point.size());
         else
-            ptr_ref.reset(new Node(head, point));
+            NNSearch(point, head->r.get(), pq, n, (dimention + 1) % point.size());
+
+        if (is_left && head->r)
+        {
+            if (auto dim_dist = dimention_distance(head->r->point, point, dimention); (square_distance(pq.top(), point)) > dim_dist * dim_dist || pq.size() < n)
+                NNSearch(point, head->r.get(), pq, n, (dimention + 1) % point.size());
+        }
+        else if (!is_left && head->l)
+        {
+            if (auto dim_dist = dimention_distance(head->l->point, point, dimention); (square_distance(pq.top(), point)) > dim_dist * dim_dist || pq.size() < n)
+                NNSearch(point, head->l.get(), pq, n, (dimention + 1) % point.size());
+        }
     }
-
-
 
     void print(const std::string& prefix, Node* node, bool isLeft) const
     {
@@ -211,7 +250,7 @@ private:
         print(prefix + next_prefix, node->l.get(), true);
         print(prefix + next_prefix, node->r.get(), false);
     }
-    
+
 
 private:
     std::unique_ptr<Node> _head{nullptr};
@@ -221,14 +260,14 @@ private:
 int main()
 {
     KD_Tree tree{};
+    int num_of_points = 100;
+    int max_val = 50;
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < num_of_points; ++i)
     {
-        Point pt{ rand() % 30, rand() % 30, rand() % 30};
-        std::cout << pt << ", ";
+        Point pt{ rand() % max_val, rand() % max_val, rand() % max_val};
         tree.insert(pt);
     }
-    std::cout << std::endl;
 
     tree.debug_print();
 
@@ -251,6 +290,11 @@ int main()
         auto closest_n = tree.NNSearch(target, 5);
         for (auto point : closest_n)
             std::cout << "    " << point << "\n";
-        std::cout << "\n";
+        std::cout << "\n\n";
     }
+
+    std::cout << "Points inside: \n";
+    for (auto point_inside : tree.RangeQuery(Point{10,10,10}, Point{30,30,30}))
+        std::cout << "    " << point_inside << "\n";
+    std::cout << "\n\n";
 }
