@@ -80,8 +80,6 @@ public:
         ++_size;
     }
 
-
-
     Point NNSearch(const Point& point)
     {
         if (!_head)
@@ -123,23 +121,17 @@ public:
         return points_in_range;
     }
 
-    float previous_range_efficiency() const 
-    {
-        return 1.0f - (float)_range_visited_needlessly / (float)_range_visited_total;
-    }
+
+    size_t size() const { return _size; }
+
     size_t previous_range_misses() const { return _range_visited_needlessly; }
     size_t previous_range_lookups() const { return _range_visited_total; }
-
-
 
     void debug_print()
     {
         if (!_head) return;
         print("", _head.get(), false);
     }
-
-    size_t size() const { return _size; }
-
 
 private:
 
@@ -287,7 +279,7 @@ private:
 int main()
 {
     KD_Tree tree{};
-    int num_of_points = 300;
+    int num_of_points = 500;
     int max_val = 100;
 
     for (int i = 0; i < num_of_points; ++i)
@@ -320,8 +312,11 @@ int main()
         std::cout << "\n\n";
     }
 
-    std::cout << "Points inside: \n";
-    for (auto point_inside : tree.RangeQuery(Point{10,10,10}, Point{30,30,30}))
+
+    Point min_point{20,20,20};
+    Point max_point{40,40,40};
+    std::cout << "Points inside " << min_point << " to " << max_point << ": \n";
+    for (auto point_inside : tree.RangeQuery(min_point, max_point))
         std::cout << "    " << point_inside << "\n";
     std::cout << "\n";
 
