@@ -58,6 +58,11 @@ int main()
                 std::cout << it._node->val << ", ";
             std::cout << std::endl;
         }
+        if (input_str == "inorder_print")
+        {
+            bst.inorder_action_iterative([](auto val){ std::cout << val << ", ";});
+            std::cout << std::endl;
+        }
         if (input_str == "preorder_print")
         {
             bst.pre_order_action_iterative([](int i){ std::cout << i << ", "; });

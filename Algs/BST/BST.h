@@ -150,6 +150,11 @@ public:
         }
     }
 
+    void inorder_action_iterative(std::function<void(T)> f)
+    {
+        _inorder_action_iterative(root, f);
+    }
+
     Node* next_pre_order(Node* node)
     {
         if (!node) return nullptr;
@@ -176,6 +181,16 @@ public:
         
         _pre_order_action_recursive(node->l, f);
         _pre_order_action_recursive(node->r, f);
+    }
+
+    void _inorder_action_iterative(Node* node, std::function<void(T)> f)
+    {
+        if (node)
+        {
+            _inorder_action_iterative(node->l, f);
+            f(node->val);
+            _inorder_action_iterative(node->r, f);
+        }
     }
 
     Node* min() const { return min(root);}
