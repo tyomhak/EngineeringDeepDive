@@ -24,15 +24,13 @@ int main()
         // cout << power_fast<2, -1>::value << endl;
         cout << endl;
 
-        cout << "modulo\n";
-        cout << modulo_f<5>() << endl;
-        cout << modulo_f<-5>() << endl;
+        cout << "absolute value\n";
+        cout << absolute<int, 0>::value << endl;
+        cout << absolute<int, 5>::value << endl;
+        cout << absolute<int, -5>::value << endl;
 
-        cout << modulo<int, 5>::value << endl;
-        cout << modulo<int, -5>::value << endl;
-
-        cout << modulo_alt<int, 5>::value << endl;
-        cout << modulo_alt<int, -5>::value << endl;
+        cout << absolute_alt<int, 5>::value << endl;
+        cout << absolute_alt<int, -5>::value << endl;
         cout << endl;
 
         cout << "Max of 3\n";
@@ -84,10 +82,10 @@ int main()
         cout << endl;
 
 
-        // cout << "dimensions\n";
-        // cout << rank<decltype(arr)>::value << endl;
-        // // cout << rank<decltype(arr2)>::value << endl;
-        // cout << endl;
+        cout << "dimensions\n";
+        cout << rank<decltype(arr)>::value << endl;
+        cout << rank<decltype(arr2)>::value << endl;
+        cout << endl;
 
     }
     

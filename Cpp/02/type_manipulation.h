@@ -55,26 +55,17 @@ struct extent<T[size]>
 
 
 
-// 5. Return dimensionality (rank) of provided static multidimensional array type 'U'.
-// template<typename T>
-// struct rank;
+// 5. Return dimensionality (rank) of provided static multidimensional array type 'T'.
+template<typename T>
+struct rank
+{
+    const static size_t value = 0;
+};
 
-// template<typename T, size_t size>
-// struct rank<T[size]>
-// {
-//     const static size_t rank =  
-// }
-
-// template<typename T>
-// struct rank
-// {
-//     const static size_t value = 0;
-// };
-
-// template<typename T, size_t size>
-// struct rank<T[size]>
-// {
-//     const static size_t value = rank<decltype(T)>::value + 1;
-// };
+template<typename T, size_t size>
+struct rank<T[size]>
+{
+    const static size_t value = rank<T>::value + 1;
+};
 
 

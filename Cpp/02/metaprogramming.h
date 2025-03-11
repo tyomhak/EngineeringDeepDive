@@ -58,33 +58,27 @@ struct power_fast<base, 0>
 /*
 2. Absolute |X| of given value 'X'
 */
-template<int x>
-consteval int modulo_f()
-{
-    return (x >= 0 ? x : -x);
-}
-
 template<typename T, T val, bool is_positive>
-struct modulo_impl
+struct absolute_impl
 {
     const static T value = val;
 };
 
 template<typename T, T val>
-struct modulo_impl<T, val, false>
+struct absolute_impl<T, val, false>
 {
     const static T value = -val;
 };
 
 template<typename T, T val>
-struct modulo
+struct absolute
 {
-    const static T value = modulo_impl<T, val, val >= 0>::value;
+    const static T value = absolute_impl<T, val, val >= 0>::value;
 };
 
 
 template<typename T, T val>
-struct modulo_alt
+struct absolute_alt
 {
     const static T value = (val >= 0) ? val : -val;
 };
@@ -134,21 +128,21 @@ struct digits_count<0, false>
 /*
 5. Number of divisors of 'N'
 */
-template<int number, int divisor, bool is_divisible>
+template<int number, int divisor>
 struct divisor_count_helper
 {
-    const static int value = (is_divisible ? 1 : 0)
-        + divisor_count_helper<number, divisor - 1, number % (divisor - 1) == 0>::value;
+    const static size_t value = (number % divisor == 0 ? 1 : 0) 
+        + divisor_count_helper<number, divisor - 1>::value;
 };
 
-template<int number, bool is_divisible>
-struct divisor_count_helper<number, 1, is_divisible>
+template<int number>
+struct divisor_count_helper<number, 0>
 {
-    const static int value = 1;
+    const static size_t value = 0;
 };
 
 template<int number>
 struct divisor_count
 {
-    const static int value = divisor_count_helper<number, number, true>::value;
+    const static int value = divisor_count_helper<number, number>::value;
 };
