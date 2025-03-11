@@ -209,8 +209,8 @@ int main()
     // 5. dumber of digits
     std::cout << "\nDigits count\n";
     static_assert(digits_count<123345>::value == 6, "digits_count<123345>::value");
-    static_assert(digits_count<123345>::value == 6, "digits_count<123345>::value");
-    static_assert(digits_count<123345>::value == 6, "digits_count<123345>::value");
+    static_assert(digits_count<404>::value == 3, "digits_count<123345>::value");
+    static_assert(digits_count<0>::value == 1, "digits_count<123345>::value");
     std::cout << digits_count<112038700, true>::value << std::endl;
     std::cout << digits_count<150 * 34>::value << std::endl;
     std::cout << digits_count<0>::value << std::endl;
