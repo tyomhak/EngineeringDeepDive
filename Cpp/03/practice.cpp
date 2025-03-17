@@ -3,6 +3,36 @@
 #include <vector>
 
 
+#define TEST_VALUE_0 0
+#define TEST_VALUE_1 1
+
+
+class test_class
+{
+public:
+    template<uint param>
+    const char* get_info()
+    { 
+        static_assert(false, "Missing param type"); 
+        return nullptr; 
+    }
+
+    
+};
+
+template<>
+const char* test_class::get_info<TEST_VALUE_0>()
+{
+    return "0";
+};
+
+template<>
+const char* test_class::get_info<TEST_VALUE_1>()
+{
+    return "1";
+}
+
+
 template<typename T>
 struct add_ptr
 {
@@ -101,11 +131,11 @@ struct type_name_printer<const T>
 };
 
 template<typename T>
-struct type_name_printer<const T*>
+struct type_name_printer<T* const>
 {
     static std::string name()
     {
-        return std::string("const ") + type_name_printer<T>::name();
+        return type_name_printer<T>::name() + "* " + std::string("const ");
     }
 };
 
@@ -139,4 +169,8 @@ int main()
     cout << type_name_printer<float&>::name() << endl;
     cout << type_name_printer<std::vector<int>>::name() << endl;
     cout << type_name_printer<std::vector<const int* const *const ** const *>>::name() << endl;
+
+    test_class temp{};
+    cout << temp.get_info<TEST_VALUE_0>() << endl;
+    cout << temp.get_info<TEST_VALUE_1>() << endl;
 }
