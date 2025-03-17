@@ -5,7 +5,7 @@
 
 
 //
-// Trivial solutions for kkeping 3 or more items.
+// Trivial solutions for keeping 3 or more items.
 // 
 
 void dont_do_this_way()
@@ -81,15 +81,13 @@ struct getter
 	/// Type of the nested tuple.
 	typedef typename TupleType::inner_type inner_tuple_type;
 
-	/// Type of the field at 'Index'.
-	typedef typename getter< 
-			inner_tuple_type, 
-			Index - 1 >::type type;
-
 	/// Type of the getter, to work with nested tuple.
 	typedef getter<	
 			inner_tuple_type, 
 			Index - 1 > inner_getter_type;
+			
+	/// Type of the field at 'Index'.
+	typedef inner_getter_type::type type;
 
 	/// Const / non-const access to the field at 'Index'.
 	static const type& get( const TupleType& t )
@@ -163,7 +161,7 @@ void test_printer_func( float a, const std::string& b, int c )
 /// User is required to specify all necessary indexes for addressing
 /// the tuple.
 template< unsigned int... Indexes >
-struct executor_by_indexes
+struct executor_by_indexes 
 {
 	/// Invokes "Callable" 'f', using some fields of tuple 't' as arguments.
 	/// Indexes of the fields to be used are specified in 'Indexes...'
