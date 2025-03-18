@@ -4,9 +4,6 @@
 3) tuple դասի getter-ը ձևափոխել այնպես, 
 որ ինդեքսով overflow-ի ժամանակ մենք compile error տեսնենք։ 
 Հիշենք որ tuple-ի ինդեքսները compile time հայտնի մեծություններ են։
-
-
-4) Իրականացնել երկու tuple-ների համեմատման օպերատոր "operator==":
 */
 
 template< typename... Types >
@@ -24,6 +21,8 @@ struct tuple< HeadType, BodyTypes... >
 	typedef HeadType head_type;                // Type of the first value
 	typedef tuple< BodyTypes... > inner_type;  // Type of nested tuple
 
+	constexpr static int size = inner_type::size + 1;
+
 	HeadType _head;               // First value of the tuple
 	tuple< BodyTypes... > _body;  // The remaining values
 
@@ -38,6 +37,7 @@ struct tuple< HeadType, BodyTypes... >
 template<>
 struct tuple<>
 {
+	constexpr static int size = 0;
 };
 
 
@@ -45,23 +45,18 @@ struct tuple<>
 template< typename TupleType, unsigned int Index >
 struct getter
 {
-	/// Type of the nested tuple.
 	typedef typename TupleType::inner_type inner_tuple_type;
 
-	/// Type of the field at 'Index'.
 	typedef typename getter< 
 			inner_tuple_type, 
 			Index - 1 >::type type;
 
-	/// Type of the getter, to work with nested tuple.
 	typedef getter<	
 			inner_tuple_type, 
 			Index - 1 > inner_getter_type;
 
-	/// Const / non-const access to the field at 'Index'.
 	static const type& get( const TupleType& t )
 		{ return inner_getter_type::get( t._body ); }
-	//
 	static type& get( TupleType& t )
 		{ return inner_getter_type::get( t._body ); }
 };
@@ -70,13 +65,10 @@ struct getter
 template< typename TupleType >
 struct getter< TupleType, 0 >
 {
-	/// Type of the field at 'Index'.
 	typedef typename TupleType::head_type type;
 
-	/// Const / non-const access to the field at 'Index'.
 	static const type& get( const TupleType& t )
 		{ return t._head; }
-	//
 	static type& get( TupleType& t )
 		{ return t._head; }
 };
@@ -94,7 +86,7 @@ template< unsigned int Index, typename TupleType >
 const typename getter< TupleType, Index >::type&
 get( const TupleType& t )
 	{ return getter< TupleType, Index >::get( t ); }
-//
+
 template< unsigned int Index, typename TupleType >
 typename getter< TupleType, Index >::type&
 get( TupleType& t )
@@ -102,6 +94,9 @@ get( TupleType& t )
 
 
 
+/*
+4. Equality comparison of 2 tuples
+*/
 template<typename... T>
 bool operator==(const tuple<T...>& l, const tuple<T...>& r)
 {
@@ -111,3 +106,50 @@ bool operator==(const tuple<T...>& l, const tuple<T...>& r)
 
 bool operator==(const tuple<>&, const tuple<>&)
 { return true; }
+
+
+/*
+implement access by index from right (reverse access)
+*/
+template<typename tuple_type, unsigned int index>
+struct getter_rev
+{
+	typedef typename tuple_type::inner_type inner_type;
+	typedef getter_rev<inner_type, index> inner_getter_type;
+	typedef typename inner_getter_type::type type;
+
+	static const type& get(const tuple_type& tuple)
+	{
+		return inner_getter_type::get(tuple._body);
+	}
+	static type& get(tuple_type& tuple)
+	{
+		return inner_getter_type::get(tuple._body);
+	}
+};
+
+template<typename tuple_type>
+struct getter_rev<tuple_type, tuple_type::size - 1>
+{
+	typedef tuple_type::head_type type;
+
+	static const type& get(const tuple_type& tuple)
+		{ return tuple._head; }
+	static type& get(tuple_type& tuple)
+		{ return tuple._head; }
+};
+
+
+template<unsigned int index, typename tuple_type>
+const typename getter_rev<tuple_type, index>::type&
+rget(const tuple_type& tuple)
+{
+	return getter_rev<tuple_type, index>::get(tuple);
+}
+
+template<unsigned int index, typename tuple_type>
+typename getter_rev<tuple_type, index>::type&
+rget(tuple_type& tuple)
+{
+	return getter_rev<tuple_type, index>::get(tuple);
+}

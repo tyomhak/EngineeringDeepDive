@@ -1,8 +1,9 @@
 #pragma once
 #include <cstddef>
-#include <type_traits>
+
 /*
-1. 
+1. get volume of multi_array
+
 multi_array template-ի մեջ ավելացնել "static constexpr int volume = ..." դաշտ, 
 որը ցույց կտա ընդհանուր վանդակների քանակը այդ կառուցվածքում։
 */
@@ -39,62 +40,61 @@ struct multi_array< T >
 
 
 /*
-2. 
+2. access by index to multi_array
+
 Իրականացնել multi_array_accessor template, 
 որի պարամետրերը կլինեն հենց ինքը multi_array-ը ու 
 ինդեքսների variadic հաջորդականությունը։ 
-
 Նպատակն է՝ հասանելիություն ստանալ կոնկրետ վանդակներին։
 */
 
-// template< typename MultiArrayT, size_t depth, size_t... indices>
-// struct accessor
-// {
-//     static_assert(sizeof...(indices) == MultiArrayT::volume, "Incorrect number of indices passed");
+template<typename ArrayType, int... indices>
+struct multi_array_accessor
+{
+    static_assert(false, 
+        "temp");
+};
 
-//     typedef typename MultiArrayT::type type;
-//     typedef typename MultiArrayT::inner_array_type inner_array_type;
+template<typename ArrayType, int index, int... indices>
+struct multi_array_accessor<ArrayType, index, indices...>
+{
+    typedef typename ArrayType::inner_array_type inner_array_type;
+    typedef multi_array_accessor<inner_array_type, indices...> inner_getter;
+    typedef typename inner_getter::type type;
 
-//     static const type& get(const MultiArrayT& array) const
-//     {
-//         return accessor<inner_array_type, depth - 1, indices...>::get(array.data[])
-//     }
-
-// };
-
-// template< typename MultiArrayT, size_t depth >
-// struct accessor
-// {
-
-// };
-
-
-
+    static const type& get(const ArrayType& array)
+    {
+        return inner_getter::get(array.data[index]);
+    }
+    static type& get(ArrayType& array)
+    {
+        return inner_getter::get(array.data[index]);
+    }
+};
 
 
+template<typename ArrayType>
+struct multi_array_accessor<ArrayType>
+{
+    typedef typename ArrayType::type type;
 
-// template<typename MultiArrayType, size_t depth, size_t index, size_t... indices>
-// struct multi_array_accessor
-// {
-//     typedef typename MultiArrayType::type type;
-//     typedef typename MultiArrayType::inner_array_type inner_array_type;
-//     typedef multi_array_accessor<inner_array_type, depth - 1, indices...> inner_accessor;
+    static const type& get(const ArrayType& array)
+        { return array.data; }
 
-//     static const inner_accessor::type& get(const MultiArrayType& arr)
-//         { return inner_accessor::get(arr.data[index]); }
+    static type& get(ArrayType& array)
+        { return array.data; }
+};
 
-//     static inner_accessor::type& get(MultiArrayType& arr)
-//         { return inner_accessor::get(arr.data[index]); }
-// };
+template<unsigned int... indices, typename multi_array_type>
+const multi_array_accessor<multi_array_type, indices...>::type&
+array_get(const multi_array_type& array)
+{
+    return multi_array_accessor<multi_array_type, indices...>::get(array);
+}
 
-// template<typename MultiArrayType, size_t index>
-// struct multi_array_accessor<MultiArrayType, 0, index>
-// {
-//     typedef typename MultiArrayType::type type;
-
-//     static const type& get(MultiArrayType& arr)
-//         { return arr.data[index]; }
-
-//     static type& get(MultiArrayType& arr) 
-//         { return arr.data[index]; }
-// };
+template<unsigned int... indices, typename multi_array_type>
+multi_array_accessor<multi_array_type, indices...>::type&
+array_get(multi_array_type& array)
+{
+    return multi_array_accessor<multi_array_type, indices...>::get(array);
+}
