@@ -1,3 +1,4 @@
+#include <string>
 
 #include "Logger.h"
 
@@ -26,36 +27,31 @@ class circular_buffer {};
 template< typename T, int Capacity >
 class unrolled_linked_list {};
 
-
-template<typename T, unsigned int _size>
-struct TypeSize
+namespace type_1
 {
-    typedef T type;
-    static const unsigned int size = _size;
-};
-
 template<
     template<typename, int> class CONT,
-    typename... types>
+    int... sizes>
 struct performance_evaluator
 {
-    static_assert( false, 
-        "General case of 'performance_evaluator' class template should"
-        " not be instantiated." );
+    static_assert(false, "Default impl should never be used");
 };
 
 template<
     template<typename, int> class CONT,
-    typename TS,
-    typename... types>
-struct performance_evaluator<CONT, TS, types...>
+    int size,
+    int... sizes>
+struct performance_evaluator<CONT, size, sizes...>
 {
-    void measure() {
-        CONT<typename TS::type, TS::size> cont{};
-        // .. run
+    void measure_performance()
+    {
+        CONT< int, size > c1;
+        CONT< char, size > c2;
+        CONT< double, size > c3;
+        CONT< std::string, size > c4;
 
-        performance_evaluator<CONT, types...> inner_evaluator;
-        inner_evaluator.measure();
+        performance_evaluator<CONT, sizes...> pe{};
+        pe.measure_performance();
     }
 };
 
@@ -63,33 +59,65 @@ template<
     template<typename, int> class CONT>
 struct performance_evaluator<CONT>
 {
-    void measure()
+    void measure_performance()
     {}
 };
+}
+
+namespace type_2
+{
+
+        
+}
+
 
 int main()
 {
-    Logger<SimpleCombiner, Receiver1, Transformer1, Sender1> logger_1{};
-    Logger<ComplexCombiner, Receiver1, Transformer2, Sender3> logger_2{};
+    test_logger();
+    type_1::performance_evaluator<static_array, 1,2,3> pe;
+    pe.measure_performance();
 
-    performance_evaluator< 
-        static_array, 
-        TypeSize<int, 5>,
-        TypeSize<float, 10>,
-        TypeSize<double, 15>,
-        TypeSize<char, 20>
-        > ev1;
     
-    ev1.measure();
-
-    performance_evaluator< 
-        unrolled_linked_list, 
-        TypeSize<int, 5>,
-        TypeSize<float, 10>,
-        TypeSize<double, 15>,
-        TypeSize<char, 20>
-        > ev2;
-
-    ev2.measure();
 
 }
+
+
+// template<typename T, unsigned int _size>
+// struct TypeSize
+// {
+//     typedef T type;
+//     static const unsigned int size = _size;
+// };
+
+// template<
+//     template<typename, int> class CONT,
+//     typename... types>
+// struct performance_evaluator
+// {
+//     static_assert( false, 
+//         "General case of 'performance_evaluator' class template should"
+//         " not be instantiated." );
+// };
+
+// template<
+//     template<typename, int> class CONT,
+//     typename TS,
+//     typename... types>
+// struct performance_evaluator<CONT, TS, types...>
+// {
+//     void measure() {
+//         CONT<typename TS::type, TS::size> cont{};
+//         // .. run
+
+//         performance_evaluator<CONT, types...> inner_evaluator;
+//         inner_evaluator.measure();
+//     }
+// };
+
+// template<
+//     template<typename, int> class CONT>
+// struct performance_evaluator<CONT>
+// {
+//     void measure()
+//     {}
+// };

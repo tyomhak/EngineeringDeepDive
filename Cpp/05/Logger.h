@@ -48,3 +48,10 @@ struct Logger
     Combiner<RT, TT, ST> combiner{RT(), TT(), ST()};
 };
 
+
+void test_logger()
+{
+    Logger<SimpleCombiner, Receiver1, Transformer1, Sender1> logger_1{};
+    Logger<ComplexCombiner, Receiver1, Transformer2, Sender3> logger_2{};
+}
+
