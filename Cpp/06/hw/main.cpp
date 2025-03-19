@@ -1,6 +1,5 @@
 #include <iostream>
 
-
 #include "sequence.hpp"
 
 
@@ -25,21 +24,10 @@ struct ct_printer< ct_empty_sequence >
 	}
 };
 
-// Exercises:
-//
-// Implement the following metafunctions:
-//
-//
-// 
-//
-
-
 
 // Advanced exercise:
-//
 // 1) Implement compile-time Binary search tree, and several metafunctions 
 //        for it.
-//
 
 
 // Exercises:
@@ -51,26 +39,48 @@ struct ct_printer< ct_empty_sequence >
 
 int main()
 {
+	using std::cout;
+	using std::endl;
+
     typedef ct_sequence< 5, 
 					ct_sequence< 72, 
 						ct_sequence< 9, 
 							ct_sequence< 16, 
 								ct_sequence< 24, ct_empty_sequence > > > > > s1;
 
-    std::cout << "Count of 9: " << ct_count<s1, 9>::count << std::endl;
+    cout << "Count of 9: " << ct_count<s1, 9>::count << endl;
 
 
     typedef typename ct_sequence_L<4,1,4,2,3,4,5,4, 6>::type s2;
-    std::cout << "Count of 4: " << ct_count<s2, 4>::count << std::endl;
+    cout << "Count of 4: " << ct_count<s2, 4>::count << endl;
 
     typedef typename ct_pop_front<s2>::type s3;
-    std::cout << "Count of 4: " << ct_count<s3, 4>::count << std::endl;
+    cout << "Count of 4: " << ct_count<s3, 4>::count << endl;
 
     typedef typename ct_insert<s3, 2, 4>::type s4;
-    std::cout << "Count of 4: " << ct_count<s4, 4>::count << std::endl;
+    cout << "Count of 4: " << ct_count<s4, 4>::count << endl;
 
     ct_printer<s4>::print();
 
     typedef typename ct_reverse<s4>::type s5;
+	std::cout << "reversed: \n";
     ct_printer<s5>::print();
+
+	typedef typename ct_erase<s5, 3>::type s6;
+	ct_printer<s6>::print();
+
+	constexpr auto max = ct_max_element<s6>::value;
+	cout << "Max: " << max << endl;
+
+	typedef typename ct_push_back<s6, 10>::type s7;
+	ct_printer<s7>::print();
+
+	typedef typename ct_sequence_L<1,2,3,4,5,8>::type s8;
+	ct_printer<s8>::print();
+	typedef typename ct_insert_to_sorted<s8, 7>::type s9;
+	ct_printer<s9>::print();
+
+	typedef typename ct_insertion_sort<s7>::type s10;
+	ct_printer<s10>::print();
+
 }
