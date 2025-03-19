@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "sequence.hpp"
+#include "multitype_sequence.hpp"
 
 
 template< typename Sequence >
@@ -35,13 +36,6 @@ void print()
 // Advanced exercise:
 // 1) Implement compile-time Binary search tree, and several metafunctions 
 //        for it.
-
-
-// Exercises:
-//
-// 1) Implement removal of all the values which are of given type 'T'.
-//
-// 2) Implement filtering of all those values, which are of given type 'T'.
 
 
 int main()
@@ -95,9 +89,29 @@ int main()
 	print<s9>();
 
 
+
 	cout << "Sorting V\n";
 	print<s7>();
 	typedef typename ct_insertion_sort<s7>::type s10;
 	cout << "Sorted:\n";
 	print<s10>();
+
+	// multitype_sequence
+	{
+		cout << "\n==multitype sequences==\n";
+		typedef ct_multitype_sequence< int, 19, 
+					ct_multitype_sequence< long long, 45'674'005'354'012,
+						ct_multitype_sequence< char, 'g', 
+							ct_multitype_sequence< int, 42, ct_empty_sequence > > > > a1;
+
+		print<a1>();
+		
+		typedef typename ct_remove_t<a1, int>::type a2;
+		cout << "remove ints\n";
+		print<a2>();
+
+		cout << "filter ints\n";
+		typedef typename ct_filter_t<a1, int>::type a3;
+		print<a3>();
+	}
 }
