@@ -99,6 +99,47 @@ struct performance_evaluator<CONT, size>
 //    function "measure_performance()" to do "M*N" instantiations.
 namespace type_3
 {
+    
+template<typename T, unsigned int _size>
+struct TypeSize
+{
+    typedef T type;
+    static const unsigned int size = _size;
+};
+
+template<
+    template<typename, int> class CONT,
+    typename... types>
+struct performance_evaluator
+{
+    static_assert( false, 
+        "General case of 'performance_evaluator' class template should"
+        " not be instantiated." );
+};
+
+template<
+    template<typename, int> class CONT,
+    typename TS,
+    typename... types>
+struct performance_evaluator<CONT, TS, types...>
+{
+    void measure() {
+        CONT<typename TS::type, TS::size> cont{};
+        // .. run
+
+        performance_evaluator<CONT, types...> inner_evaluator;
+        inner_evaluator.measure();
+    }
+};
+
+template<
+    template<typename, int> class CONT>
+struct performance_evaluator<CONT>
+{
+    void measure()
+    {}
+};
+
 }
 
 
@@ -111,45 +152,12 @@ int main()
     type_2::performance_evaluator<circular_buffer, 5, int, float, char*, std::string> pe_2;
     pe_2.measure();
 
+    using type_3::TypeSize;
+
+    type_3::performance_evaluator<static_array, 
+        TypeSize<int, 5>,
+        TypeSize<float, 4>,
+        TypeSize<std::string, 8>> pe_3;
+    pe_3.measure();
 }
 
-
-// template<typename T, unsigned int _size>
-// struct TypeSize
-// {
-//     typedef T type;
-//     static const unsigned int size = _size;
-// };
-
-// template<
-//     template<typename, int> class CONT,
-//     typename... types>
-// struct performance_evaluator
-// {
-//     static_assert( false, 
-//         "General case of 'performance_evaluator' class template should"
-//         " not be instantiated." );
-// };
-
-// template<
-//     template<typename, int> class CONT,
-//     typename TS,
-//     typename... types>
-// struct performance_evaluator<CONT, TS, types...>
-// {
-//     void measure() {
-//         CONT<typename TS::type, TS::size> cont{};
-//         // .. run
-
-//         performance_evaluator<CONT, types...> inner_evaluator;
-//         inner_evaluator.measure();
-//     }
-// };
-
-// template<
-//     template<typename, int> class CONT>
-// struct performance_evaluator<CONT>
-// {
-//     void measure()
-//     {}
-// };
