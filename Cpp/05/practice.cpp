@@ -2,19 +2,6 @@
 
 #include "Logger.h"
 
-// Exercises:
-//
-// 1) In function "measure_performance()" provide also sizes of containers, as a variadic list 
-//    of integers. Make the function to instantiate provided conatiner with all those sizes.
-// 
-// 2) In function "measure_performance()" provide also types of elements of the containers, 
-//    as a variadic sequence of types integers. Make the function to instantiate provided 
-//    conatiner with all those sizes.
-// 
-// 3) [*] Provide both variadic lists: list of 'M' sizes, and list of 'N' types. Make the
-//    function "measure_performance()" to do "M*N" instantiations.
-//
-
 /// Declaration of static array.
 template< typename T, int Capacity >
 class static_array {};
@@ -27,6 +14,9 @@ class circular_buffer {};
 template< typename T, int Capacity >
 class unrolled_linked_list {};
 
+
+// 1) In function "measure_performance()" provide also sizes of containers, as a variadic list 
+//    of integers. Make the function to instantiate provided conatiner with all those sizes.
 namespace type_1
 {
 template<
@@ -64,20 +54,62 @@ struct performance_evaluator<CONT>
 };
 }
 
+
+// 2) In function "measure_performance()" provide also types of elements of the containers, 
+//    as a variadic sequence of types integers. Make the function to instantiate provided 
+//    conatiner with all those sizes.
 namespace type_2
 {
+template<
+    template<typename, int> class CONT,
+    int size,
+    typename... ArgTypes>
+struct performance_evaluator
+{
+    static_assert(false, "Default");
+};
 
-        
+template<
+    template<typename, int> class CONT,
+    int size,
+    typename T,
+    typename... ArgTypes>
+struct performance_evaluator<CONT, size, T, ArgTypes...>
+{
+    void measure()
+    {
+        CONT<T, size> cont;
+
+        performance_evaluator<CONT, size, ArgTypes...> p_eval{};
+        p_eval.measure();
+    }
+};
+
+template<
+    template<typename, int> class CONT,
+    int size>
+struct performance_evaluator<CONT, size>
+{
+    void measure(){}
+};
+}
+
+
+// 3) [*] Provide both variadic lists: list of 'M' sizes, and list of 'N' types. Make the
+//    function "measure_performance()" to do "M*N" instantiations.
+namespace type_3
+{
 }
 
 
 int main()
 {
     test_logger();
-    type_1::performance_evaluator<static_array, 1,2,3> pe;
+    type_1::performance_evaluator<static_array, 5, 3, 2, 1> pe;
     pe.measure_performance();
 
-    
+    type_2::performance_evaluator<circular_buffer, 5, int, float, char*, std::string> pe_2;
+    pe_2.measure();
 
 }
 
