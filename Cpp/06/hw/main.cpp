@@ -24,6 +24,13 @@ struct ct_printer< ct_empty_sequence >
 	}
 };
 
+template<typename T>
+void print()
+{
+	ct_printer<T>::print();
+	std::cout << "\n";
+}
+
 
 // Advanced exercise:
 // 1) Implement compile-time Binary search tree, and several metafunctions 
@@ -48,39 +55,49 @@ int main()
 							ct_sequence< 16, 
 								ct_sequence< 24, ct_empty_sequence > > > > > s1;
 
-    cout << "Count of 9: " << ct_count<s1, 9>::count << endl;
+	print<s1>();
+    cout << "Count of 9: " << ct_count<s1, 9>::count << "\n\n";
 
+	typedef typename ct_sequence_6<1,2,3,4,5,6>::type s1_1;
+	print<s1_1>();
 
     typedef typename ct_sequence_L<4,1,4,2,3,4,5,4, 6>::type s2;
-    cout << "Count of 4: " << ct_count<s2, 4>::count << endl;
+	print<s2>();
 
     typedef typename ct_pop_front<s2>::type s3;
-    cout << "Count of 4: " << ct_count<s3, 4>::count << endl;
+	cout << "pop front\n";
+	print<s3>();
 
     typedef typename ct_insert<s3, 2, 4>::type s4;
-    cout << "Count of 4: " << ct_count<s4, 4>::count << endl;
-
-    ct_printer<s4>::print();
+	cout << "insert 4 at index 2\n";
+	print<s4>();
 
     typedef typename ct_reverse<s4>::type s5;
-	std::cout << "reversed: \n";
-    ct_printer<s5>::print();
+	cout << "reversed: \n";
+    print<s5>();
 
 	typedef typename ct_erase<s5, 3>::type s6;
-	ct_printer<s6>::print();
+	cout << "erase at index 3\n";
+	print<s6>();
 
 	constexpr auto max = ct_max_element<s6>::value;
 	cout << "Max: " << max << endl;
 
 	typedef typename ct_push_back<s6, 10>::type s7;
-	ct_printer<s7>::print();
+	cout << "push_back 10\n";
+	print<s7>();
 
 	typedef typename ct_sequence_L<1,2,3,4,5,8>::type s8;
-	ct_printer<s8>::print();
+	cout << "\nNew Sorted Seq\n";
+	print<s8>();
 	typedef typename ct_insert_to_sorted<s8, 7>::type s9;
-	ct_printer<s9>::print();
+	cout << "Insert into sorted 7\n";
+	print<s9>();
 
+
+	cout << "Sorting V\n";
+	print<s7>();
 	typedef typename ct_insertion_sort<s7>::type s10;
-	ct_printer<s10>::print();
-
+	cout << "Sorted:\n";
+	print<s10>();
 }

@@ -2,26 +2,8 @@
 
 #include <limits>
 
-/// Recursive implementation of a sequence.
-template< int Head, typename BodyType >
-struct ct_sequence
-{
-	/// Head value of this sequence.
-	static constexpr int head = Head;
-
-	/// Continuation of this sequence.
-	typedef BodyType body_type;
-
-	/// Length of this sequence.
-	static constexpr unsigned int length = body_type::length + 1;
-};
-
-/// The "exit branch" for recursive sequence.
-struct ct_empty_sequence
-{
-	/// Length of empty sequence is zero.
-	static constexpr unsigned int length = 0;
-};
+#include "../in_class/code_10__ct_sequence.hpp"
+#include "../in_class/code_30__ct_sequence_builder.hpp"
 
 
 // 1) Write a metafunction for counting number of occurrences of given 
@@ -44,7 +26,13 @@ struct ct_count<ct_empty_sequence, value>
 
 // PART 2
 // 1) Write "ct_sequence_6" class template.
-
+template< int V1, int V2, int V3, int V4, int V5, int V6 >
+struct ct_sequence_6
+{
+	typedef ct_sequence< 
+			V1, 
+			typename ct_sequence_5< V2, V3, V4, V5, V6>::type > type;
+};
 
 
 // 2) Implement "ct_sequence_L" class variadic template.
