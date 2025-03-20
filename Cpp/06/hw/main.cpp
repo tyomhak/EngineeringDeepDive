@@ -34,11 +34,6 @@ void print()
 }
 
 
-// Advanced exercise:
-// 1) Implement compile-time Binary search tree, and several metafunctions 
-//        for it.
-
-
 int main()
 {
 	using std::cout;
